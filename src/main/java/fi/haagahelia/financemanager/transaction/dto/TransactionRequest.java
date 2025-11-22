@@ -1,21 +1,39 @@
 package fi.haagahelia.financemanager.transaction.dto;
 
 import fi.haagahelia.financemanager.transaction.TransactionType;
-import lombok.Data;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.*;
 
 import java.time.LocalDate;
 
 /**
- * Incoming request for creating or updating a transaction.
+ * Incoming payload for creating or updating a Transaction.
+ *
+ * This is what the client sends in JSON.
  */
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class TransactionRequest {
-    
-    private String description;
-    private double amount;
-    private LocalDate date;
-    private TransactionType type;
 
-    // ID of the account the transaction belongs to
+    @NotNull
     private Long accountId;
+
+    @NotNull
+    @Size(min = 1, max = 255)
+    private String description;
+
+    @NotNull
+    @Min(0)
+    private Double amount;
+
+    @NotNull
+    private LocalDate date;
+
+    @NotNull
+    private TransactionType type;
 }

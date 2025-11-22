@@ -10,12 +10,6 @@ import java.util.List;
 
 /**
  * REST controller for managing financial transactions.
- *
- * Provides endpoints for:
- * - Creating a new transaction
- * - Listing all transactions
- * - Listing transactions for a specific account
- * - Deleting a transaction
  */
 @RestController
 @RequestMapping("/api/transactions")

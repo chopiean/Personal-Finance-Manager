@@ -8,12 +8,6 @@ import java.time.LocalDate;
 
 /**
  * Represents a financial transaction belonging to an Account.
- *
- * Uses Lombok annotations for:
- * - @Getter / @Setter   → auto-generate getters & setters
- * - @Builder            → allow Transaction.builder()
- * - @NoArgsConstructor  → empty constructor for JPA
- * - @AllArgsConstructor → full constructor
  */
 @Entity
 @Getter
@@ -27,20 +21,15 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Short title like "Rent", "Groceries", "Salary". */
     private String description;
 
-    /** Transaction amount (must be positive). */
     private double amount;
 
-    /** Date of the transaction. */
     private LocalDate date;
 
-    /** INCOME, EXPENSE, TRANSFER. */
     @Enumerated(EnumType.STRING)
     private TransactionType type;
 
-    /** The account this transaction belongs to. */
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;

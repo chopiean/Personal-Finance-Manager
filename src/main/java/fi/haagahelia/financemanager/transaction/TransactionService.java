@@ -12,10 +12,6 @@ import java.util.List;
 
 /**
  * Business logic for working with Transactions.
- *
- * - Validates that the Account exists
- * - Converts between Entity <-> DTO
- * - Provides methods for controllers (REST API layer)
  */
 @Service
 @RequiredArgsConstructor
@@ -24,21 +20,14 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
 
-    /**
-     * Create a new transaction for a given account.
-     * @param req payload from client
-     * @return created Transaction as DTO
-     */
     @Transactional
     public TransactionResponse createTransaction(TransactionRequest req) {
-        // 1) Find the account
         Account account = accountRepository
                 .findById(req.getAccountId())
                 .orElseThrow(() ->
                         new IllegalArgumentException("Account not found: " + req.getAccountId())
                 );
 
-        // 2) Build entity
         Transaction tx = Transaction.builder()
                 .description(req.getDescription())
                 .amount(req.getAmount())
@@ -47,10 +36,8 @@ public class TransactionService {
                 .account(account)
                 .build();
 
-        // 3) Save to DB
         Transaction saved = transactionRepository.save(tx);
 
-        // 4) Convert to response DTO
         return toResponse(saved);
     }
 

@@ -3,7 +3,9 @@ package fi.haagahelia.financemanager.budget;
 import fi.haagahelia.financemanager.account.Account;
 import jakarta.persistence.*;
 import lombok.*;
-
+/**
+ * Budget entity stored in the database
+ */
 @Getter
 @Setter
 @NoArgsConstructor

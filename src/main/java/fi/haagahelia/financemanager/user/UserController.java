@@ -25,12 +25,6 @@ public class UserController {
 
     /**
      * Public endpoint: register a new user.
-     *
-     * Example request body:
-     * {
-     *   "username": "test@example.com",
-     *   "password": "secret123"
-     * }
      */
     @PostMapping("/register")
     public UserResponse register(@Validated @RequestBody UserRegisterRequest request) {
@@ -39,7 +33,6 @@ public class UserController {
 
     /**
      * Returns info about the currently authenticated user.
-     * Requires Authorization header with Basic auth.
      */
     @GetMapping("/me")
     public UserResponse me(@AuthenticationPrincipal UserDetails principal) {

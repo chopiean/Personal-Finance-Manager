@@ -3,7 +3,7 @@ package fi.haagahelia.financemanager.user;
 import jakarta.persistence.*;
 
 /**
- * User entity stored in PostgreSQL.
+ * User entity stored in H2 database.
  * This is used for authentication and authorization.
  */
 @Entity
@@ -14,19 +14,15 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // unique username, can be email
     @Column(nullable = false, unique = true)
     private String username;
 
-    // BCrypt-hashed password
     @Column(nullable = false)
     private String password;
 
-    // simple role field (e.g. ROLE_USER, ROLE_ADMIN)
     @Column(nullable = false)
     private String role = "ROLE_USER";
 
-    // Constructors
     public User() {
     }
 

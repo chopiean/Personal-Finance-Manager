@@ -6,8 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 /**
- * JPA repository for Account entity.
+ * Repository for reading/writing Account entities.
  */
 public interface AccountRepository extends JpaRepository<Account, Long> {
+
     List<Account> findByUser(User user);
 }

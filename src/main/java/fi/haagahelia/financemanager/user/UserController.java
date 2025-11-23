@@ -31,6 +31,14 @@ public class UserController {
         return userService.register(request);
     }
 
+    @PostMapping("/login")
+    public UserResponse login(@AuthenticationPrincipal UserDetails principal) {
+        if (principal == null) throw new RuntimeException("Invalid login");
+        var user = userRepository.findByUsername(principal.getUsername())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        return userService.toResponse(user);
+    }
+    
     /**
      * Returns info about the currently authenticated user.
      */

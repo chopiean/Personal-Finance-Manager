@@ -26,7 +26,7 @@ public class CsvImportService {
         int count = 0;
 
         try (var reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            String header = reader.readLine(); // skip header line
+            String header = reader.readLine(); 
             String line;
 
             while ((line = reader.readLine()) != null) {

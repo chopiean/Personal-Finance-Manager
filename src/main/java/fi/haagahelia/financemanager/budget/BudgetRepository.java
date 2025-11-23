@@ -4,10 +4,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 /**
- * Repository for reading/writing Budget entities from database
+ * Repository for Budget entities
  */
 public interface BudgetRepository extends JpaRepository<Budget, Long> {
-    List<Budget> findByAccountId(Long accountId);
+    List<Budget> findByAccountIdAndYearAndMonth(Long accountId, int year, int month);
 
-    List<Budget> findByAccountIdAndMonthAndYear(Long id, int month, int year);
+    List<Budget> fineByYearAndMonth( int month, int year);
 }

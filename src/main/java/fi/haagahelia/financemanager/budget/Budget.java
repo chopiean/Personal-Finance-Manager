@@ -23,10 +23,10 @@ public class Budget {
 
     private Double limitAmount;
 
-    @Column(name = "budget_month", nullable = false)
+    @Column(name = "budget_month")
     private int month;
 
-    @Column(nullable = false)
+    @Column(name = "budget_year")
     private int year;
 
     @ManyToOne

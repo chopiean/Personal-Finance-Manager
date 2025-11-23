@@ -13,8 +13,6 @@ import java.util.List;
 
 /**
  * REST API for managing Transactions.
- *
- * Base path: /api/transactions
  */
 @RestController
 @RequestMapping("/api/transactions")
@@ -34,8 +32,6 @@ public class TransactionController {
 
     /**
      * Import many transactions at once from a CSV file.
-     *
-     * Client sends: multipart/form-data with field name "file".
      */
     @PostMapping("/import")
     public List<TransactionResponse> importCsv(@RequestParam("file") MultipartFile file) {

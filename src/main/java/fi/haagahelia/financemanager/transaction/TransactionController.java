@@ -2,14 +2,19 @@ package fi.haagahelia.financemanager.transaction;
 
 import fi.haagahelia.financemanager.transaction.dto.TransactionRequest;
 import fi.haagahelia.financemanager.transaction.dto.TransactionResponse;
+import fi.haagahelia.financemanager.util.CsvTransactionImporter;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 /**
- * REST controller for managing financial transactions.
+ * REST API for managing Transactions.
+ *
+ * Base path: /api/transactions
  */
 @RestController
 @RequestMapping("/api/transactions")
@@ -17,33 +22,44 @@ import java.util.List;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final CsvTransactionImporter csvTransactionImporter;
 
     /**
-     * Create a new financial transaction.
+     * Create a single transaction from JSON payload.
      */
     @PostMapping
-    public ResponseEntity<TransactionResponse> create(@RequestBody TransactionRequest req) {
-        return ResponseEntity.ok(transactionService.createTransaction(req));
+    public TransactionResponse create(@Valid @RequestBody TransactionRequest req) {
+        return transactionService.createTransaction(req);
     }
 
     /**
-     * Get all transactions in the system.
+     * Import many transactions at once from a CSV file.
+     *
+     * Client sends: multipart/form-data with field name "file".
+     */
+    @PostMapping("/import")
+    public List<TransactionResponse> importCsv(@RequestParam("file") MultipartFile file) {
+        return csvTransactionImporter.importTransactions(file);
+    }
+
+    /**
+     * Get all transactions.
      */
     @GetMapping
-    public ResponseEntity<List<TransactionResponse>> getAll() {
-        return ResponseEntity.ok(transactionService.getAllTransactions());
+    public List<TransactionResponse> getAll() {
+        return transactionService.getAllTransactions();
     }
 
     /**
-     * Get all transactions belonging to a specific account.
+     * Get all transactions for a specific account.
      */
     @GetMapping("/account/{accountId}")
-    public ResponseEntity<List<TransactionResponse>> getByAccount(@PathVariable Long accountId) {
-        return ResponseEntity.ok(transactionService.getTransactionsByAccount(accountId));
+    public List<TransactionResponse> getByAccount(@PathVariable Long accountId) {
+        return transactionService.getTransactionsByAccount(accountId);
     }
 
     /**
-     * Delete a transaction by ID.
+     * Delete a transaction by id.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {

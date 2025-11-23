@@ -2,17 +2,15 @@ package fi.haagahelia.financemanager.transaction;
 
 import fi.haagahelia.financemanager.transaction.dto.TransactionRequest;
 import fi.haagahelia.financemanager.transaction.dto.TransactionResponse;
-import fi.haagahelia.financemanager.util.CsvTransactionImporter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 /**
- * REST API for managing Transactions.
+ * REST API for managing Transactions
  */
 @RestController
 @RequestMapping("/api/transactions")
@@ -20,7 +18,6 @@ import java.util.List;
 public class TransactionController {
 
     private final TransactionService transactionService;
-    private final CsvTransactionImporter csvTransactionImporter;
 
     /**
      * Create a single transaction from JSON payload.
@@ -31,15 +28,7 @@ public class TransactionController {
     }
 
     /**
-     * Import many transactions at once from a CSV file.
-     */
-    @PostMapping("/import")
-    public List<TransactionResponse> importCsv(@RequestParam("file") MultipartFile file) {
-        return csvTransactionImporter.importTransactions(file);
-    }
-
-    /**
-     * Get all transactions.
+     * Get all transactions in the system.
      */
     @GetMapping
     public List<TransactionResponse> getAll() {
@@ -55,7 +44,7 @@ public class TransactionController {
     }
 
     /**
-     * Delete a transaction by id.
+     * Delete a transaction by ID.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {

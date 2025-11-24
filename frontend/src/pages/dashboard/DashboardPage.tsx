@@ -12,20 +12,16 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = today.getMonth() + 1;
+
     const load = async () => {
       try {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth() + 1; // FIX: backend expects 1-12
-
         const data = await apiFetch<MonthlySummaryResponse>(
-          `/reports/monthly?year=${year}&month=${month}`
+          `/reports/monthly?year=${y}&month=${m}`
         );
-
         setSummary(data);
-      } catch (e) {
-        console.error("Dashboard load failed", e);
-        setSummary(null);
       } finally {
         setLoading(false);
       }

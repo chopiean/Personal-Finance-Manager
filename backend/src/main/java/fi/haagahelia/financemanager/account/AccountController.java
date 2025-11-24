@@ -10,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/accounts")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class AccountController {
 
     private final AccountService accountService;
@@ -48,6 +50,9 @@ public class AccountController {
             @AuthenticationPrincipal UserDetails principal
     ) {
         String username = (principal != null ? principal.getUsername() : null);
-        return accountService.getAccountsForUserOrAll(username);
+        return accountService.getAccountsForUserOrAll(username)
+                            .stream()
+                            .sorted(Comparator.comparing(AccountResponse::getName))
+                            .toList();
     }
 }

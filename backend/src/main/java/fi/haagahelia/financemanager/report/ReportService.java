@@ -4,7 +4,7 @@ import fi.haagahelia.financemanager.budget.Budget;
 import fi.haagahelia.financemanager.budget.BudgetRepository;
 import fi.haagahelia.financemanager.report.dto.BudgetStatus;
 import fi.haagahelia.financemanager.report.dto.CategorySummary;
-import fi.haagahelia.financemanager.report.dto.MonthlyReportResponse;
+import fi.haagahelia.financemanager.report.dto.MonthlySummaryResponse;
 import fi.haagahelia.financemanager.transaction.Transaction;
 import fi.haagahelia.financemanager.transaction.TransactionRepository;
 import fi.haagahelia.financemanager.transaction.TransactionType;
@@ -31,17 +31,17 @@ public class ReportService {
      * Generate an advanced monthly report.
      */
     @Transactional(readOnly = true)
-    public MonthlyReportResponse getMonthlyReport(int year, int month, Long accountId) {
+    public MonthlySummaryResponse getMonthlySummary(int year, int month, Long accountId) {
         YearMonth ym = YearMonth.of(year, month);
         LocalDate start = ym.atDay(1);
         LocalDate end = ym.atEndOfMonth();
 
-        // 1) Load transactions for the period
+        // 1) Load transactions
         List<Transaction> txs = (accountId == null)
                 ? transactionRepository.findByDateBetween(start, end)
                 : transactionRepository.findByAccountIdAndDateBetween(accountId, start, end);
 
-        // 2) Aggregate totals
+        // 2) Calculate totals
         double totalIncome = txs.stream()
                 .filter(t -> t.getType() == TransactionType.INCOME)
                 .mapToDouble(Transaction::getAmount)
@@ -54,7 +54,7 @@ public class ReportService {
 
         double net = totalIncome - totalExpense;
 
-        // 3) Category breakdown (we treat description as category label)
+        // 3) Category summary
         Map<String, CategorySummary> byCategory = new HashMap<>();
 
         for (Transaction t : txs) {
@@ -77,6 +77,7 @@ public class ReportService {
             } else if (t.getType() == TransactionType.EXPENSE) {
                 summary.setTotalExpense(summary.getTotalExpense() + t.getAmount());
             }
+
             summary.setNet(summary.getTotalIncome() - summary.getTotalExpense());
         }
 
@@ -90,7 +91,6 @@ public class ReportService {
                 ? budgetRepository.findByYearAndMonth(year, month)
                 : budgetRepository.findByAccountIdAndYearAndMonth(accountId, year, month);
 
-        // Map description/category -> total expenses
         Map<String, Double> expenseByCategory = txs.stream()
                 .filter(t -> t.getType() == TransactionType.EXPENSE)
                 .collect(Collectors.groupingBy(
@@ -107,23 +107,22 @@ public class ReportService {
                             .orElse("Uncategorized");
 
                     double actual = expenseByCategory.getOrDefault(cat, 0.0);
-                    double diff = b.getLimitAmount() - actual;
+                    double limit = b.getLimitAmount() == null ? 0.0 : b.getLimitAmount();
+                    double diff = limit - actual;
 
                     return BudgetStatus.builder()
                             .category(cat)
-                            .budgetLimit(
-                                    b.getLimitAmount() == null ? 0.0 : b.getLimitAmount()
-                            )
+                            .budgetLimit(limit)
                             .actualExpense(actual)
                             .difference(diff)
-                            .overBudget(actual > (b.getLimitAmount() == null ? 0.0 : b.getLimitAmount()))
+                            .overBudget(actual > limit)
                             .build();
                 })
                 .sorted(Comparator.comparing(BudgetStatus::getCategory))
                 .toList();
 
-        // 5) Build final DTO
-        return MonthlyReportResponse.builder()
+        // 5) Build summary
+        return MonthlySummaryResponse.builder()
                 .year(year)
                 .month(month)
                 .accountId(accountId)

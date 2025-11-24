@@ -1,7 +1,6 @@
 package fi.haagahelia.financemanager.report.dto;
 
 import lombok.*;
-
 import java.util.List;
 
 /**
@@ -12,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MonthlyReportResponse {
+public class MonthlySummaryResponse {
 
     private int year;
     private int month;

@@ -1,42 +1,66 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const nav = useNavigate();
+
   const [username, setUser] = useState("");
   const [password, setPass] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  async function login() {
+  async function handleLogin(e?: FormEvent) {
+    if (e) e.preventDefault();
+    setLoading(true);
+
     try {
-      await apiFetch("/auth/login", {
+      const user = await apiFetch("/auth/login", {
         method: "POST",
-        headers: { Authorization: "Basic " + btoa(username + ":" + password) },
+        body: JSON.stringify({ username, password }),
       });
 
-      localStorage.setItem("username", username);
+      localStorage.setItem("user", JSON.stringify(user));
+
       nav("/");
-    } catch (err: any) {
-      alert("Login failed: " + err.message);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unknown login error";
+      alert("Login failed: " + message);
+    } finally {
+      setLoading(false);
     }
   }
+
   return (
-    <div style={{ padding: 40 }}>
+    <div style={{ padding: 40, maxWidth: 300, margin: "0 auto" }}>
       <h2>Login</h2>
-      <input
-        placeholder="Email"
-        value={username}
-        onChange={(e) => setUser(e.target.value)}
-      ></input>
-      <br />
-      <input
-        placeholder="Password"
-        type="password"
-        value={password}
-        onChange={(e) => setPass(e.target.value)}
-      ></input>
-      <br />
-      <button onClick={login}>Login</button>
+
+      <form onSubmit={handleLogin}>
+        <input
+          placeholder="Email"
+          value={username}
+          onChange={(e) => setUser(e.target.value)}
+          required
+          style={{ width: "100%", marginBottom: 10 }}
+        />
+
+        <input
+          placeholder="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPass(e.target.value)}
+          required
+          style={{ width: "100%", marginBottom: 10 }}
+        />
+
+        <button
+          type="submit"
+          disabled={loading}
+          style={{ width: "100%", padding: 8 }}
+        >
+          {loading ? "Logging in..." : "Login"}
+        </button>
+      </form>
     </div>
   );
 }

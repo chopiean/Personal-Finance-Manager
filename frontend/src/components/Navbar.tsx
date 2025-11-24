@@ -1,20 +1,36 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import "./Navbar.css";
+
+const links = [
+  { to: "/dashboard", label: "Dashboard" },
+  { to: "/accounts", label: "Accounts" },
+  { to: "/transactions", label: "Transactions" },
+  { to: "/budgets", label: "Budgets" },
+];
 
 export default function Navbar() {
   return (
-    <nav style={{ padding: 10, background: "#222", color: "white" }}>
-      <Link to="/" style={{ marginRight: 15 }}>
-        Dashboard
-      </Link>
-      <Link to="/accounts" style={{ marginRight: 15 }}>
-        Accounts
-      </Link>
-      <Link to="/transactions" style={{ marginRight: 15 }}>
-        Transactions
-      </Link>
-      <Link to="/budgets" style={{ marginRight: 15 }}>
-        Budgets
-      </Link>
-    </nav>
+    <header className="nav-shell">
+      <div className="nav-inner">
+        <div className="nav-logo">
+          <span className="nav-logo-dot" />
+          <span>Finance Manager</span>
+        </div>
+
+        <nav className="nav-links">
+          {links.map((l) => (
+            <NavLink
+              key={l.to}
+              to={l.to}
+              className={({ isActive }) =>
+                "nav-link" + (isActive ? " nav-link-active" : "")
+              }
+            >
+              {l.label}
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+    </header>
   );
 }

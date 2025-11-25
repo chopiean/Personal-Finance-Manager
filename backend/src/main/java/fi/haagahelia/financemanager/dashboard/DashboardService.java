@@ -22,26 +22,31 @@ public class DashboardService {
 
     public DashboardResponse buildDashboard() {
 
+        // Total balance from all accounts 
         double totalBalance = accountRepository.findAll()
                 .stream()
-                .mapToDouble(a -> a.getInitialBalance())
+                .mapToDouble(a -> a.getInitialBalance().doubleValue())
                 .sum();
 
+        // Monthly income sum
         double income = transactionRepository.findAll()
                 .stream()
-                .filter(t -> t.getAmount() > 0)
+                .filter(t -> t.getType().name().equals("INCOME"))
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 
+        // Monthly expenses sum (absolute values)
         double expenses = transactionRepository.findAll()
                 .stream()
-                .filter(t -> t.getAmount() < 0)
-                .mapToDouble(t -> Math.abs(t.getAmount()))
+                .filter(t -> t.getType().name().equals("EXPENSE"))
+                .mapToDouble(Transaction::getAmount)
                 .sum();
 
+        // Savings rate = (income - expenses) / income
         double savingsRate =
-                (income == 0) ? 0 : (income - expenses) / income * 100;
+                (income == 0) ? 0 : ((income - expenses) / income) * 100;
 
+        // Recent transactions (requires findTop5ByOrderByDateDesc)
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         List<DashboardResponse.RecentTransactionItem> recent =
@@ -49,7 +54,7 @@ public class DashboardService {
                         .stream()
                         .map(t -> new DashboardResponse.RecentTransactionItem(
                                 t.getId(),
-                                t.getCategory(),
+                                t.getDescription(),        
                                 t.getAmount(),
                                 t.getDate().format(fmt)
                         ))

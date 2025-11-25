@@ -22,4 +22,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             LocalDate start,
             LocalDate end
     );
+
+    /** Last 5 most recent transactions(dashboard). */
+    List<Transaction> findTop5ByOrderByDateDesc();
 }

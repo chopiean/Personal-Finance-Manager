@@ -1,8 +1,11 @@
 package fi.haagahelia.financemanager.dashboard;
 
 import fi.haagahelia.financemanager.account.AccountRepository;
+import fi.haagahelia.financemanager.security.CurrentUserService;
 import fi.haagahelia.financemanager.transaction.Transaction;
 import fi.haagahelia.financemanager.transaction.TransactionRepository;
+import fi.haagahelia.financemanager.transaction.TransactionType;
+import fi.haagahelia.financemanager.user.User;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
@@ -13,48 +16,48 @@ public class DashboardService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final CurrentUserService currentUserService;
 
     public DashboardService(AccountRepository accountRepository,
-                            TransactionRepository transactionRepository) {
+                            TransactionRepository transactionRepository,
+                            CurrentUserService currentUserService) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
+        this.currentUserService = currentUserService;
     }
 
     public DashboardResponse buildDashboard() {
 
-        // Total balance from all accounts 
-        double totalBalance = accountRepository.findAll()
+        User user = currentUserService.getCurrentUser();
+
+        double totalBalance = accountRepository.findByUserId(user.getId())
                 .stream()
                 .mapToDouble(a -> a.getInitialBalance().doubleValue())
                 .sum();
 
-        // Monthly income sum
-        double income = transactionRepository.findAll()
-                .stream()
-                .filter(t -> t.getType().name().equals("INCOME"))
+        List<Transaction> allUserTx = transactionRepository.findByAccountUserId(user.getId());
+
+        double income = allUserTx.stream()
+                .filter(t -> t.getType() == TransactionType.INCOME)
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 
-        // Monthly expenses sum (absolute values)
-        double expenses = transactionRepository.findAll()
-                .stream()
-                .filter(t -> t.getType().name().equals("EXPENSE"))
+        double expenses = allUserTx.stream()
+                .filter(t -> t.getType() == TransactionType.EXPENSE)
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 
-        // Savings rate = (income - expenses) / income
         double savingsRate =
                 (income == 0) ? 0 : ((income - expenses) / income) * 100;
 
-        // Recent transactions (requires findTop5ByOrderByDateDesc)
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         List<DashboardResponse.RecentTransactionItem> recent =
-                transactionRepository.findTop5ByOrderByDateDesc()
+                transactionRepository.findTop5ByAccountUserIdOrderByDateDesc(user.getId())
                         .stream()
                         .map(t -> new DashboardResponse.RecentTransactionItem(
                                 t.getId(),
-                                t.getDescription(),        
+                                t.getDescription(),
                                 t.getAmount(),
                                 t.getDate().format(fmt)
                         ))

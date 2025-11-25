@@ -1,19 +1,24 @@
 package fi.haagahelia.financemanager.dashboard;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
+@RequestMapping("/api/dashboard")
 public class DashboardController {
-    
-    private final DashboardService dashboardService;
 
-    public DashboardController(DashboardService dashboardService) {
-        this.dashboardService = dashboardService;
-    }
-
-    @GetMapping("/dashboard")
-    public DashboardResponse getDashboard() {
-        return dashboardService.buildDashboard();
+    @GetMapping
+    public Map<String, Object> dashboard() {
+        return Map.of(
+            "summary", Map.of(
+                "totalBalance", 0,
+                "income", 0,
+                "expenses", 0,
+                "savingsRate", 0
+            ),
+            "recentTransactions", List.of()
+        );
     }
 }

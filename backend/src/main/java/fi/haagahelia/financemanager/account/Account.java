@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Represents a financial account (Wallet, Bank account, Credit card,...)
+ * Represents a financial account 
  */
 @Getter
 @Setter

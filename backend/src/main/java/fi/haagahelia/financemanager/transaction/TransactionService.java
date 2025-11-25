@@ -7,6 +7,9 @@ import fi.haagahelia.financemanager.transaction.dto.TransactionResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import fi.haagahelia.financemanager.report.dto.MonthlySummaryResponse;
+import java.util.Collections;
+
 
 import java.util.List;
 
@@ -85,6 +88,22 @@ public class TransactionService {
                 .type(tx.getType())
                 .accountId(tx.getAccount().getId())
                 .accountName(tx.getAccount().getName())
+                .build();
+    }
+
+    /**
+     * Temporary monthly summary until full reporting system is implemented.
+     */
+    public MonthlySummaryResponse getMonthlySummary(int year, int month) {
+        return MonthlySummaryResponse.builder()
+                .year(year)
+                .month(month)
+                .accountId(null)
+                .totalIncome(0.0)
+                .totalExpense(0.0)
+                .netBalance(0.0)
+                .categories(Collections.emptyList())
+                .budgetStatuses(Collections.emptyList())
                 .build();
     }
 }

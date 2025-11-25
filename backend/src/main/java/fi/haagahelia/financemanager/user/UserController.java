@@ -28,36 +28,6 @@ public class UserController {
     private final AuthenticationManager authenticationManager;
 
     /**
-     * Public endpoint — register a new user.
-     */
-    @PostMapping("/register")
-    @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse register(@Validated @RequestBody UserRegisterRequest request) {
-        return userService.register(request);
-    }
-
-    /**
-     * Login endpoint — authenticate using username/password.
-     */
-    @PostMapping("/login")
-    public UserResponse login(@RequestBody UserLoginRequest request) {
-
-        Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(
-                request.getUsername(),
-                request.getPassword()
-            )
-        );
-
-        UserDetails principal = (UserDetails) authentication.getPrincipal();
-
-        var user = userRepository.findByUsername(principal.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return userService.toResponse(user);
-    }
-
-    /**
      * Returns the currently authenticated user.
      */
     @GetMapping("/me")

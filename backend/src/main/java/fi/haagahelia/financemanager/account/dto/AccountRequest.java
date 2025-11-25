@@ -27,7 +27,6 @@ public class AccountRequest {
     @DecimalMin("0.0")
     private BigDecimal initialBalance;
 
-    @NotNull
     private AccountType type;
 
     @Size(max = 1000)

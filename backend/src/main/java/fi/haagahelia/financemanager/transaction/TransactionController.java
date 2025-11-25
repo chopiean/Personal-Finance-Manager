@@ -1,5 +1,6 @@
 package fi.haagahelia.financemanager.transaction;
 
+import fi.haagahelia.financemanager.report.dto.MonthlySummaryResponse;
 import fi.haagahelia.financemanager.transaction.dto.TransactionRequest;
 import fi.haagahelia.financemanager.transaction.dto.TransactionResponse;
 import jakarta.validation.Valid;
@@ -52,6 +53,9 @@ public class TransactionController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Expose monthly summary.
+     */
     @GetMapping("/summary/monthly")
     public MonthlySummaryResponse getMonthlySummary(
             @RequestParam int year,

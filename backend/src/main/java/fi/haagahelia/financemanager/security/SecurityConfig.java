@@ -2,6 +2,7 @@ package fi.haagahelia.financemanager.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -10,37 +11,26 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
-
-            .sessionManagement(session -> 
-                session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-            )
-
+            .csrf(csrf -> csrf.disable())   
             .authorizeHttpRequests(auth -> auth
-                // public endpoints
-                .requestMatchers("/api/auth/register", "/api/auth/login", "/h2-console/**").permitAll()
-
-                // allow all GET
-                .requestMatchers(HttpMethod.GET, "/**").permitAll()
-
-                // everything else requires login
-                .anyRequest().authenticated()
+                .requestMatchers("/api/auth/register", "/api/auth/login")
+                    .permitAll()            
+                .anyRequest()
+                    .authenticated()        
             )
-
-            // disable default login forms
-            .formLogin(form -> form.disable())
-            .httpBasic(basic -> basic.disable());
+            .formLogin(form -> form.disable())   
+            .httpBasic(basic -> basic.disable()) 
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
+            ); 
 
         return http.build();
     }
@@ -51,8 +41,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
-            throws Exception {
-        return config.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
+        return cfg.getAuthenticationManager();
     }
 }

@@ -23,6 +23,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             LocalDate end
     );
 
+    /** All transactions for a user's account. */
+    List<Transaction> findByAccountUserId(Long userId);
+
     /** Last 5 most recent transactions(dashboard). */
-    List<Transaction> findTop5ByOrderByDateDesc();
+    List<Transaction> findTop5ByAccountUserIdOrderByDateDesc(Long userId);
+
+    /** Transactions for a user within a date range */
+    List<Transaction> findByAccountUserIdAndDateBetween(
+            Long userId,
+            LocalDate start,
+            LocalDate end
+    );
 }

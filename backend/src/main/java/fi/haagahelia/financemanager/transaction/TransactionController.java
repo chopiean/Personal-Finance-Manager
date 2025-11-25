@@ -51,4 +51,12 @@ public class TransactionController {
         transactionService.deleteTransaction(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/summary/monthly")
+    public MonthlySummaryResponse getMonthlySummary(
+            @RequestParam int year,
+            @RequestParam int month
+    ) {
+        return transactionService.getMonthlySummary(year, month);
+    }
 }

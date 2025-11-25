@@ -1,137 +1,200 @@
-// src/pages/dashboard/DashboardPage.tsx
 import { useEffect, useState } from "react";
 import { apiFetch } from "../../api/api";
-import type { MonthlySummaryResponse } from "../../api/type";
 
-import { Doughnut } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+// Types
+type DashboardSummary = {
+  totalBalance: number;
+  income: number;
+  expenses: number;
+  savingsRate: number;
+};
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+type TransactionItem = {
+  id: number;
+  category: string;
+  amount: number;
+  date: string;
+};
+
+type DashboardResponse = {
+  summary: DashboardSummary;
+  recentTransactions: TransactionItem[];
+};
 
 export default function DashboardPage() {
-  const [summary, setSummary] = useState<MonthlySummaryResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [recent, setRecent] = useState<TransactionItem[]>([]);
 
   useEffect(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
-
-    const load = async () => {
-      try {
-        const data = await apiFetch<MonthlySummaryResponse>(
-          `/reports/monthly?year=${year}&month=${month}`
-        );
-        setSummary(data);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void load();
+    (async () => {
+      const data = (await apiFetch("/dashboard")) as DashboardResponse;
+      setSummary(data.summary);
+      setRecent(data.recentTransactions);
+    })();
   }, []);
 
-  if (loading) {
-    return <section className="card">Loading dashboard…</section>;
-  }
-
-  if (!summary) {
-    return (
-      <section className="card">
-        <h1 className="page-title">Overview</h1>
-        <p className="page-subtitle">
-          No data yet – start by creating an account and adding a transaction.
-        </p>
-      </section>
-    );
-  }
-
-  const expenseCategories = summary.categories.filter(
-    (c) => c.totalExpense > 0
-  );
-
-  const chartData = {
-    labels: expenseCategories.map((c) => c.category),
-    datasets: [
-      {
-        data: expenseCategories.map((c) => c.totalExpense),
-        backgroundColor: [
-          "#22c55e",
-          "#0ea5e9",
-          "#f97316",
-          "#a855f7",
-          "#facc15",
-          "#ec4899",
-        ],
-      },
-    ],
-  };
-
-  const chartOptions = {
-    plugins: {
-      legend: {
-        labels: {
-          color: "#374151",
-        },
-      },
-    },
-  };
-
-  const monthLabel = new Date(summary.year, summary.month - 1).toLocaleString(
-    undefined,
-    { month: "long", year: "numeric" }
-  );
-
   return (
-    <div className="grid grid-2">
-      <section className="card">
-        <h1 className="page-title">Overview</h1>
-        <p className="page-subtitle">{monthLabel}</p>
+    <div
+      style={{
+        padding: "40px",
+        maxWidth: 1200,
+        margin: "0 auto",
+        color: "#111827",
+      }}
+    >
+      {/* Header */}
+      <h1
+        style={{
+          fontSize: 32,
+          fontWeight: 700,
+          letterSpacing: "-0.5px",
+          marginBottom: 20,
+        }}
+      >
+        Welcome back 👋
+      </h1>
 
-        <div className="stat-grid">
-          <div className="stat-card">
-            <div className="stat-label">Total income</div>
-            <div className="stat-value stat-value-positive">
-              € {summary.totalIncome.toFixed(2)}
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-label">Total expenses</div>
-            <div className="stat-value stat-value-negative">
-              € {summary.totalExpense.toFixed(2)}
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-label">Net balance</div>
-            <div
-              className={
-                "stat-value " +
-                (summary.netBalance >= 0
-                  ? "stat-value-positive"
-                  : "stat-value-negative")
-              }
-            >
-              € {summary.netBalance.toFixed(2)}
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-label">Tracked categories</div>
-            <div className="stat-value">{summary.categories.length || 0}</div>
-          </div>
+      {/* Summary Cards */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+          gap: 24,
+          marginBottom: 40,
+        }}
+      >
+        {/* Total Balance */}
+        <div
+          style={{
+            padding: 24,
+            borderRadius: 20,
+            background: "white",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+            border: "1px solid #f1f1f1",
+          }}
+        >
+          <p style={{ color: "#6b7280" }}>Total Balance</p>
+          <h2 style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>
+            €{summary?.totalBalance.toFixed(2) ?? "0.00"}
+          </h2>
         </div>
-      </section>
 
-      <section className="card">
-        <h2 className="page-title">Expenses by category</h2>
-        {expenseCategories.length === 0 ? (
-          <p className="muted">No expenses recorded for this period.</p>
-        ) : (
-          <Doughnut data={chartData} options={chartOptions} />
+        {/* Income */}
+        <div
+          style={{
+            padding: 24,
+            borderRadius: 20,
+            background: "white",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+            border: "1px solid #f1f1f1",
+          }}
+        >
+          <p style={{ color: "#6b7280" }}>Income (This Month)</p>
+          <h3
+            style={{
+              fontSize: 26,
+              fontWeight: 600,
+              marginTop: 6,
+              color: "#16a34a",
+            }}
+          >
+            +€{summary?.income.toFixed(2) ?? "0.00"}
+          </h3>
+        </div>
+
+        {/* Expenses */}
+        <div
+          style={{
+            padding: 24,
+            borderRadius: 20,
+            background: "white",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+            border: "1px solid #f1f1f1",
+          }}
+        >
+          <p style={{ color: "#6b7280" }}>Expenses (This Month)</p>
+          <h3
+            style={{
+              fontSize: 26,
+              fontWeight: 600,
+              marginTop: 6,
+              color: "#dc2626",
+            }}
+          >
+            -€{summary?.expenses.toFixed(2) ?? "0.00"}
+          </h3>
+        </div>
+
+        {/* Savings */}
+        <div
+          style={{
+            padding: 24,
+            borderRadius: 20,
+            background: "white",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+            border: "1px solid #f1f1f1",
+          }}
+        >
+          <p style={{ color: "#6b7280" }}>Savings Rate</p>
+          <h3 style={{ fontSize: 26, fontWeight: 600, marginTop: 6 }}>
+            {summary?.savingsRate ?? 0}%
+          </h3>
+        </div>
+      </div>
+
+      {/* Recent Transactions */}
+      <h2
+        style={{
+          fontSize: 22,
+          fontWeight: 700,
+          marginBottom: 16,
+          letterSpacing: "-0.2px",
+        }}
+      >
+        Recent Transactions
+      </h2>
+
+      <div
+        style={{
+          background: "white",
+          borderRadius: 20,
+          padding: 20,
+          boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
+          border: "1px solid #f1f1f1",
+        }}
+      >
+        {recent.length === 0 && (
+          <p style={{ color: "#9ca3af" }}>No recent transactions.</p>
         )}
-      </section>
+
+        {recent.map((t) => (
+          <div
+            key={t.id}
+            style={{
+              padding: "14px 0",
+              borderBottom: "1px solid #f0f0f0",
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <strong>{t.category}</strong>
+              <p style={{ color: "#6b7280", marginTop: 4, fontSize: 14 }}>
+                {t.date}
+              </p>
+            </div>
+
+            <div
+              style={{
+                fontWeight: 600,
+                color: t.amount >= 0 ? "#16a34a" : "#dc2626",
+              }}
+            >
+              {t.amount >= 0 ? "+" : "-"}€{Math.abs(t.amount).toFixed(2)}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

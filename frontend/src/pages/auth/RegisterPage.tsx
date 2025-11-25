@@ -24,7 +24,7 @@ export default function RegisterPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Unknown registration error";
-      alert("Registration failed: " + message);
+      alert("Registration failed. " + message);
     } finally {
       setLoading(false);
     }

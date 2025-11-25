@@ -1,8 +1,15 @@
-import { Link, useNavigate } from "react-router-dom";
-import type { ReactNode } from "react";
+import { Link, useNavigate, Outlet, useLocation } from "react-router-dom";
 
-export default function Layout({ children }: { children: ReactNode }) {
+const NAV_ITEMS = [
+  { label: "Dashboard", path: "/" },
+  { label: "Accounts", path: "/accounts" },
+  { label: "Transactions", path: "/transactions" },
+  { label: "Budgets", path: "/budgets" },
+];
+
+export default function Layout() {
   const nav = useNavigate();
+  const location = useLocation();
 
   function logout() {
     localStorage.removeItem("user");
@@ -10,130 +17,136 @@ export default function Layout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div style={styles.wrapper}>
-      {/* Animated Sidebar */}
-      <aside style={styles.sidebar}>
-        <h2 style={styles.logo}>Finance</h2>
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        background: "linear-gradient(120deg,#f5f7fb,#eef2ff)",
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif',
+      }}
+    >
+      {/* SIDEBAR */}
+      <aside
+        style={{
+          width: 260,
+          padding: "28px 20px 24px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          background: "rgba(255,255,255,0.9)",
+          backdropFilter: "blur(20px)",
+          borderRight: "1px solid rgba(148,163,184,0.25)",
+          boxShadow: "4px 0 18px rgba(15,23,42,0.06)",
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              marginBottom: 24,
+              color: "#0f172a",
+              letterSpacing: 0.2,
+            }}
+          >
+            Finance
+          </h1>
 
-        <nav style={styles.nav}>
-          <Link style={styles.link} to="/">
-            Dashboard
-          </Link>
-          <Link style={styles.link} to="/accounts">
-            Accounts
-          </Link>
-          <Link style={styles.link} to="/transactions">
-            Transactions
-          </Link>
-          <Link style={styles.link} to="/budgets">
-            Budgets
-          </Link>
-        </nav>
+          <nav
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            {NAV_ITEMS.map((item) => {
+              const active =
+                item.path === "/"
+                  ? location.pathname === "/"
+                  : location.pathname.startsWith(item.path);
 
-        <button style={styles.logoutBtn} onClick={logout}>
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 12,
+                    fontSize: 14,
+                    fontWeight: active ? 600 : 400,
+                    color: active ? "#0f172a" : "#475569",
+                    backgroundColor: active ? "#e5f2ff" : "transparent",
+                    border: active
+                      ? "1px solid rgba(59,130,246,0.25)"
+                      : "1px solid transparent",
+                    transition: "background-color 0.15s ease, transform 0.1s",
+                  }}
+                  onMouseEnter={(e) =>
+                    ((e.target as HTMLAnchorElement).style.backgroundColor =
+                      active ? "#e5f2ff" : "#f1f5f9")
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.target as HTMLAnchorElement).style.backgroundColor =
+                      active ? "#e5f2ff" : "transparent")
+                  }
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <button
+          onClick={logout}
+          style={{
+            width: "100%",
+            padding: "10px 14px",
+            borderRadius: 999,
+            border: "none",
+            background:
+              "linear-gradient(135deg,rgba(248,113,113,1),rgba(239,68,68,1))",
+            color: "white",
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: "pointer",
+            boxShadow: "0 8px 18px rgba(248,113,113,0.35)",
+            transition: "transform 0.1s ease, box-shadow 0.1s ease",
+          }}
+          onMouseEnter={(e) => {
+            const btn = e.target as HTMLButtonElement;
+            btn.style.transform = "translateY(-1px)";
+            btn.style.boxShadow = "0 10px 22px rgba(248,113,113,0.42)";
+          }}
+          onMouseLeave={(e) => {
+            const btn = e.target as HTMLButtonElement;
+            btn.style.transform = "translateY(0)";
+            btn.style.boxShadow = "0 8px 18px rgba(248,113,113,0.35)";
+          }}
+        >
           Logout
         </button>
       </aside>
 
-      {/* Content */}
-      <main style={styles.content}>{children}</main>
+      {/* MAIN CONTENT */}
+      <main
+        style={{
+          flex: 1,
+          padding: "28px 40px",
+          overflowY: "auto",
+          background: "linear-gradient(135deg,#f9fbff,#ffffff)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1040,
+            margin: "0 auto",
+          }}
+        >
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
 }
-
-/* -----------------------------------------------------
-   ⚡ Inline Styles + Keyframes for Animation
------------------------------------------------------ */
-const fadeIn = {
-  animation: "fadeIn 0.4s ease-out forwards",
-};
-
-const slideIn = {
-  animation: "slideIn 0.6s ease-out forwards",
-};
-
-const styles: Record<string, React.CSSProperties> = {
-  wrapper: {
-    display: "flex",
-    height: "100vh",
-    fontFamily: "Inter, sans-serif",
-    background:
-      "linear-gradient(135deg, #dfe9f3 0%, #ffffff 60%, #f8f9fa 100%)",
-  },
-
-  /* Glassmorphism Sidebar */
-  sidebar: {
-    width: 260,
-    padding: "30px 20px",
-    background: "rgba(255, 255, 255, 0.14)",
-    boxShadow: "0 4px 25px rgba(0,0,0,0.15)",
-    backdropFilter: "blur(18px)",
-    borderRight: "1px solid rgba(255,255,255,0.25)",
-    borderRadius: "0 20px 20px 0",
-    display: "flex",
-    flexDirection: "column",
-    ...slideIn,
-  },
-
-  logo: {
-    fontSize: "2rem",
-    marginBottom: 40,
-    fontWeight: 700,
-    color: "#1e293b",
-    letterSpacing: "-1px",
-    textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-  },
-
-  nav: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 18,
-  },
-
-  link: {
-    color: "#0f172a",
-    textDecoration: "none",
-    fontSize: "1.15rem",
-    fontWeight: 500,
-    padding: "10px 16px",
-    borderRadius: 12,
-    transition: "all 0.25s ease",
-    backdropFilter: "blur(5px)",
-    background: "rgba(255,255,255,0.1)",
-  },
-
-  logoutBtn: {
-    marginTop: "auto",
-    padding: "12px",
-    background: "linear-gradient(135deg, #ff5757 0%, #ff1e1e 100%)",
-    color: "white",
-    border: "none",
-    borderRadius: 12,
-    cursor: "pointer",
-    fontSize: "1rem",
-    fontWeight: 600,
-    boxShadow: "0 4px 10px rgba(255,0,0,0.3)",
-    transition: "0.25s",
-  },
-
-  content: {
-    flex: 1,
-    padding: 40,
-    overflowY: "auto",
-    ...fadeIn,
-  },
-};
-
-/* Inject keyframes into the page */
-const styleTag = document.createElement("style");
-styleTag.innerHTML = `
-@keyframes slideIn {
-  0% { transform: translateX(-80px); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-}
-@keyframes fadeIn {
-  0% { opacity: 0; transform: translateY(10px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-`;
-document.head.appendChild(styleTag);

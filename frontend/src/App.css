@@ -23,12 +23,11 @@
 
 /* Generic card */
 .card {
-  background: rgba(15, 23, 42, 0.9);
+  background: white;
   border-radius: 18px;
-  padding: 20px 22px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(18px);
+  padding: 22px 26px;
+  border: 1px solid #ececec;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
 }
 
 /* Page title */

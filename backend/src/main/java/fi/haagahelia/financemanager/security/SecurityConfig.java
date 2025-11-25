@@ -2,7 +2,6 @@ package fi.haagahelia.financemanager.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -11,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableMethodSecurity
@@ -22,19 +22,25 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+
+            .sessionManagement(session -> 
+                session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             )
 
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                .requestMatchers("/h2-console/**").permitAll()
+                // public endpoints
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/h2-console/**").permitAll()
+
+                // allow all GET
                 .requestMatchers(HttpMethod.GET, "/**").permitAll()
+
+                // everything else requires login
                 .anyRequest().authenticated()
             )
 
-            .httpBasic(basic -> basic.enable())
-            .formLogin(form -> form.disable());
+            // disable default login forms
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable());
 
         return http.build();
     }

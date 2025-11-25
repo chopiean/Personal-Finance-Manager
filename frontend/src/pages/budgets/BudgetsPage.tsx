@@ -1,54 +1,78 @@
+// src/pages/budgets/BudgetsPage.tsx
 import { useEffect, useState } from "react";
 import { apiFetch } from "../../api/api";
-
-export type Budget = {
-  id: number;
-  category: string;
-  limitAmount: number;
-  month: number;
-  year: number;
-};
+import type { MonthlySummaryResponse, BudgetStatus } from "../../api/type";
 
 export default function BudgetsPage() {
-  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [budgets, setBudgets] = useState<BudgetStatus[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiFetch<Budget[]>("/budgets")
-      .then((data) => setBudgets(data))
-      .catch(() => setBudgets([]));
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+
+    const load = async () => {
+      try {
+        const data = await apiFetch<MonthlySummaryResponse>(
+          `/reports/monthly?year=${year}&month=${month}`
+        );
+        setBudgets(data.budgetStatuses ?? []);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void load();
   }, []);
 
   return (
-    <section className="card apple-card">
+    <section className="card">
       <h1 className="page-title">Budgets</h1>
       <p className="page-subtitle">
-        Monthly spending limits tracked per category
+        See how your spending compares to your monthly limits.
       </p>
 
-      {budgets.length === 0 ? (
-        <p className="muted">No budgets created yet.</p>
+      {loading ? (
+        <p className="muted">Loading budgets…</p>
+      ) : budgets.length === 0 ? (
+        <p className="muted">
+          No budgets configured for this month. Create budgets in the backend to
+          see them here.
+        </p>
       ) : (
-        <div className="table-wrapper">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Limit (€)</th>
-                <th>Month</th>
-                <th>Year</th>
-              </tr>
-            </thead>
-            <tbody>
-              {budgets.map((b) => (
-                <tr key={b.id}>
-                  <td>{b.category}</td>
-                  <td>€{b.limitAmount.toFixed(2)}</td>
-                  <td>{b.month}</td>
-                  <td>{b.year}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="list-grid">
+          {budgets.map((b) => (
+            <div key={b.category} className="budget-card">
+              <div className="account-name">{b.category}</div>
+              <div className="account-meta">
+                Limit: € {b.budgetLimit.toFixed(2)}
+              </div>
+              <div className="account-meta">
+                Spent: € {b.actualExpense.toFixed(2)}
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div className="account-balance">
+                  {b.difference >= 0 ? "Left" : "Over"}: €{" "}
+                  {Math.abs(b.difference).toFixed(2)}
+                </div>
+                <span
+                  className={
+                    "badge " + (b.overBudget ? "badge-danger" : "badge-ok")
+                  }
+                >
+                  {b.overBudget ? "Over budget" : "On track"}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </section>

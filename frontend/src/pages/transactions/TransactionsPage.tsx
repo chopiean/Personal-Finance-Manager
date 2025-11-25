@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent, type ChangeEvent } from "react";
+// src/pages/transactions/TransactionsPage.tsx
+import { useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
 import type { AccountResponse, TransactionResponse } from "../../api/type";
 
@@ -13,33 +14,39 @@ type TransactionForm = {
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [accounts, setAccounts] = useState<AccountResponse[]>([]);
-  const [form, setForm] = useState<TransactionForm>({
+  const [form, setForm] = useState<TransactionForm>(() => ({
     description: "",
     amount: "",
     date: new Date().toISOString().slice(0, 10),
     type: "EXPENSE",
     accountId: "",
-  });
-  const [loading, setLoading] = useState(false);
+  }));
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      const tx = await apiFetch<TransactionResponse[]>("/transactions");
-      const acc = await apiFetch<AccountResponse[]>("/accounts");
+      const [tx, acc] = await Promise.all([
+        apiFetch<TransactionResponse[]>("/transactions"),
+        apiFetch<AccountResponse[]>("/accounts"),
+      ]);
       setTransactions(tx);
       setAccounts(acc);
     };
-    load();
+    void load();
   }, []);
 
-  function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (!form.accountId || !form.amount || !form.description) return;
 
+    setSubmitting(true);
     try {
       const payload = {
         description: form.description,
@@ -55,43 +62,52 @@ export default function TransactionsPage() {
       });
 
       setTransactions((prev) => [created, ...prev]);
-      setForm({ ...form, description: "", amount: "" });
+      setForm((prev) => ({
+        ...prev,
+        description: "",
+        amount: "",
+      }));
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="grid">
-      <section className="card apple-card">
+    <div className="grid grid-2">
+      <section className="card">
         <h1 className="page-title">New transaction</h1>
-        <p className="page-subtitle">Log income, expenses or transfers</p>
+        <p className="page-subtitle">
+          Quickly log income, expenses or transfers.
+        </p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <div>
-              <label className="field-label">Description</label>
+              <div className="field-label">Description</div>
               <input
                 className="input"
                 name="description"
                 value={form.description}
                 onChange={handleChange}
+                placeholder="Groceries, Rent, Salary…"
               />
             </div>
 
             <div>
-              <label className="field-label">Amount (€)</label>
+              <div className="field-label">Amount (€)</div>
               <input
                 className="input"
-                type="number"
                 name="amount"
+                type="number"
+                step="0.01"
+                min="0"
                 value={form.amount}
                 onChange={handleChange}
               />
             </div>
 
             <div>
-              <label className="field-label">Date</label>
+              <div className="field-label">Date</div>
               <input
                 className="input"
                 type="date"
@@ -102,7 +118,7 @@ export default function TransactionsPage() {
             </div>
 
             <div>
-              <label className="field-label">Type</label>
+              <div className="field-label">Type</div>
               <select
                 className="select"
                 name="type"
@@ -116,14 +132,14 @@ export default function TransactionsPage() {
             </div>
 
             <div>
-              <label className="field-label">Account</label>
+              <div className="field-label">Account</div>
               <select
                 className="select"
                 name="accountId"
                 value={form.accountId}
                 onChange={handleChange}
               >
-                <option value="">Select account…</option>
+                <option value="">Choose account…</option>
                 {accounts.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name} ({a.currency})
@@ -133,15 +149,18 @@ export default function TransactionsPage() {
             </div>
           </div>
 
-          <button className="btn btn-primary" disabled={loading}>
-            {loading ? "Saving…" : "Add transaction"}
+          <button
+            className="btn btn-primary"
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? "Saving…" : "Add transaction"}
           </button>
         </form>
       </section>
 
-      <section className="card apple-card">
+      <section className="card">
         <h2 className="page-title">Recent transactions</h2>
-
         <div className="table-wrapper">
           <table className="table">
             <thead>
@@ -153,12 +172,11 @@ export default function TransactionsPage() {
                 <th style={{ textAlign: "right" }}>Amount</th>
               </tr>
             </thead>
-
             <tbody>
               {transactions.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="muted">
-                    No transactions found.
+                    No transactions yet.
                   </td>
                 </tr>
               ) : (
@@ -169,15 +187,16 @@ export default function TransactionsPage() {
                     <td>{t.accountName ?? t.accountId}</td>
                     <td>
                       <span
-                        className={`chip ${
-                          t.type === "INCOME" ? "chip-income" : "chip-expense"
-                        }`}
+                        className={
+                          "chip " +
+                          (t.type === "INCOME" ? "chip-income" : "chip-expense")
+                        }
                       >
                         {t.type}
                       </span>
                     </td>
                     <td style={{ textAlign: "right" }}>
-                      {t.type === "EXPENSE" ? "-" : "+"} €{t.amount.toFixed(2)}
+                      {t.type === "EXPENSE" ? "-" : "+"}€{t.amount.toFixed(2)}
                     </td>
                   </tr>
                 ))

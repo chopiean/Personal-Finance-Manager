@@ -1,45 +1,58 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../../api/api";
+import type { AccountResponse } from "../../api/type";
 
-export type Account = {
-  id: number;
-  name: string;
-  currency: string;
-  initialBalance: number;
+type AccountWithBalance = AccountResponse & {
+  balance?: number;
 };
 
 export default function AccountsPage() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accounts, setAccounts] = useState<AccountWithBalance[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiFetch<Account[]>("/accounts").then((data) => setAccounts(data));
+    const load = async () => {
+      try {
+        const data = await apiFetch<AccountWithBalance[]>("/accounts");
+        setAccounts(data);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
   }, []);
 
   return (
-    <section className="card apple-card">
+    <section className="card">
       <h1 className="page-title">Accounts</h1>
-      <p className="page-subtitle">Your linked finance accounts</p>
+      <p className="page-subtitle">
+        Manage the wallets and bank accounts used in your budget.
+      </p>
 
-      <div className="table-wrapper">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Currency</th>
-              <th>Initial Balance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {accounts.map((a) => (
-              <tr key={a.id}>
-                <td>{a.name}</td>
-                <td>{a.currency}</td>
-                <td>€{a.initialBalance.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {loading ? (
+        <p className="muted">Loading accounts…</p>
+      ) : accounts.length === 0 ? (
+        <p className="muted">
+          You don't have any accounts yet. Create one in the backend or via the
+          API.
+        </p>
+      ) : (
+        <div className="list-grid">
+          {accounts.map((a) => (
+            <div key={a.id} className="account-card">
+              <div className="account-name">{a.name}</div>
+              <div className="account-meta">
+                {a.type ?? "Account"} • {a.currency ?? "EUR"}
+              </div>
+
+              {/* SAFE — no any needed */}
+              {typeof a.balance === "number" && (
+                <div className="account-balance">€ {a.balance.toFixed(2)}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

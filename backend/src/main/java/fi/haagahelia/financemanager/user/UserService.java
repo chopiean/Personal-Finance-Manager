@@ -26,7 +26,7 @@ public class UserService {
     @Transactional
     public UserResponse register(UserRegisterRequest request){
         if (userRepository.existsByUsername(request.getUsername())){
-            throw new RuntimeException("Username already in use");
+            throw new RuntimeException("This email is already registered.");
         }
 
         User user = new User();

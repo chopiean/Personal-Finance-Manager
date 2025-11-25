@@ -35,11 +35,14 @@ export default function LoginPage() {
         position: "fixed",
         inset: 0,
         display: "flex",
+        flexDirection: "column", // 👈 IMPORTANT FIX
         justifyContent: "center",
         alignItems: "center",
         background: "linear-gradient(145deg, #f9fafb, #eef1f4)",
+        padding: "20px",
       }}
     >
+      {/* Login Card */}
       <div
         style={{
           width: "100%",
@@ -69,7 +72,6 @@ export default function LoginPage() {
         </p>
 
         <form onSubmit={handleLogin}>
-          {/* Email Field */}
           <input
             placeholder="Email address"
             value={username}
@@ -91,7 +93,6 @@ export default function LoginPage() {
             onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
           />
 
-          {/* Password Field */}
           <input
             placeholder="Password"
             type="password"
@@ -114,7 +115,6 @@ export default function LoginPage() {
             onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
           />
 
-          {/* Login Button */}
           <button
             type="submit"
             disabled={loading}
@@ -142,6 +142,35 @@ export default function LoginPage() {
           </button>
         </form>
       </div>
+
+      {/* Signup Line */}
+      <p
+        style={{
+          marginTop: 24,
+          fontSize: 15,
+          color: "#6b7280",
+          textAlign: "center",
+        }}
+      >
+        Don’t have an account?{" "}
+        <span
+          onClick={() => nav("/register")}
+          style={{
+            color: "#0ea5e9",
+            cursor: "pointer",
+            fontWeight: 600,
+            transition: "0.2s",
+          }}
+          onMouseEnter={(e) =>
+            ((e.target as HTMLSpanElement).style.opacity = "0.8")
+          }
+          onMouseLeave={(e) =>
+            ((e.target as HTMLSpanElement).style.opacity = "1")
+          }
+        >
+          Sign up
+        </span>
+      </p>
     </div>
   );
 }

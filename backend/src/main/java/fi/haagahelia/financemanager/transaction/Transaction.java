@@ -1,14 +1,12 @@
 package fi.haagahelia.financemanager.transaction;
 
 import fi.haagahelia.financemanager.account.Account;
+import fi.haagahelia.financemanager.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
 
-/**
- * Represents a financial transaction belonging to an Account.
- */
 @Entity
 @Getter
 @Setter
@@ -22,15 +20,17 @@ public class Transaction {
     private Long id;
 
     private String description;
-
     private double amount;
-
     private LocalDate date;
 
     @Enumerated(EnumType.STRING)
     private TransactionType type;
 
-    @ManyToOne
-    @JoinColumn(name = "account_id", nullable = false)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "account_id")
     private Account account;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id")
+    private User user;   // 👈 permanent user ownership
 }

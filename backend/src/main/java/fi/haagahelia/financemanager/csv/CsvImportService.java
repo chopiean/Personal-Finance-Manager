@@ -2,6 +2,7 @@ package fi.haagahelia.financemanager.csv;
 
 import fi.haagahelia.financemanager.transaction.TransactionService;
 import fi.haagahelia.financemanager.transaction.dto.TransactionRequest;
+import fi.haagahelia.financemanager.transaction.TransactionType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,7 +27,8 @@ public class CsvImportService {
         int count = 0;
 
         try (var reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            String header = reader.readLine(); 
+
+            reader.readLine(); // Skip header
             String line;
 
             while ((line = reader.readLine()) != null) {
@@ -35,7 +37,7 @@ public class CsvImportService {
                 LocalDate date = LocalDate.parse(parts[0]);
                 String description = parts[1];
                 Double amount = Double.parseDouble(parts[2]);
-                var type = fi.haagahelia.financemanager.transaction.TransactionType.valueOf(parts[3]);
+                TransactionType type = TransactionType.valueOf(parts[3]);
                 Long accountId = Long.parseLong(parts[4]);
 
                 TransactionRequest req = TransactionRequest.builder()
@@ -46,7 +48,8 @@ public class CsvImportService {
                         .accountId(accountId)
                         .build();
 
-                transactionService.createTransaction(req);
+                // 🔥 NEW: For CSV, use the CSV-specific method
+                transactionService.createTransactionFromCsv(req);
                 count++;
             }
 

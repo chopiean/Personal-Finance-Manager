@@ -1,35 +1,9 @@
 package fi.haagahelia.financemanager.user.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import lombok.Data;
 
-/**
- * Data transfer object used when a new user registers.
- */
+@Data
 public class UserRegisterRequest {
-    
-    @NotBlank
-    @Email
     private String username;
-
-    @NotBlank
-    @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username){
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password){
-        this.password = password;
-    }
 }

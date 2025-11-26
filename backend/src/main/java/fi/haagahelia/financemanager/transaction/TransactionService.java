@@ -2,34 +2,45 @@ package fi.haagahelia.financemanager.transaction;
 
 import fi.haagahelia.financemanager.account.Account;
 import fi.haagahelia.financemanager.account.AccountRepository;
+
 import fi.haagahelia.financemanager.transaction.dto.TransactionRequest;
 import fi.haagahelia.financemanager.transaction.dto.TransactionResponse;
+import fi.haagahelia.financemanager.report.dto.MonthlySummaryResponse;
+
+import fi.haagahelia.financemanager.user.User;
+import fi.haagahelia.financemanager.user.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import fi.haagahelia.financemanager.report.dto.MonthlySummaryResponse;
+
+import java.time.LocalDate;
 import java.util.Collections;
-
-
 import java.util.List;
 
-/**
- * Business logic for working with Transactions.
- */
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final UserRepository userRepository;
 
+    /**
+     * Create transaction for logged-in user.
+     */
     @Transactional
-    public TransactionResponse createTransaction(TransactionRequest req) {
-        Account account = accountRepository
-                .findById(req.getAccountId())
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Account not found: " + req.getAccountId())
-                );
+    public TransactionResponse createTransaction(TransactionRequest req, String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Account account = accountRepository.findById(req.getAccountId())
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+
+        if (!account.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("Account does not belong to user");
+        }
 
         Transaction tx = Transaction.builder()
                 .description(req.getDescription())
@@ -37,47 +48,96 @@ public class TransactionService {
                 .date(req.getDate())
                 .type(req.getType())
                 .account(account)
+                .user(user)
                 .build();
 
-        Transaction saved = transactionRepository.save(tx);
-
-        return toResponse(saved);
+        return toResponse(transactionRepository.save(tx));
     }
 
     /**
-     * Get all transactions in the system.
-     * Later you can filter by user or account.
-     */
-    @Transactional(readOnly = true)
-    public List<TransactionResponse> getAllTransactions() {
-        return transactionRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    /**
-     * Get all transactions belonging to a specific account.
-     */
-    @Transactional(readOnly = true)
-    public List<TransactionResponse> getTransactionsByAccount(Long accountId) {
-        return transactionRepository.findByAccountId(accountId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    /**
-     * Delete a transaction by ID.
+     * CSV Import Path (no username available)
+     * → Attach the transaction's user based on the account owner.
      */
     @Transactional
-    public void deleteTransaction(Long id) {
-        transactionRepository.deleteById(id);
+    public TransactionResponse createTransactionFromCsv(TransactionRequest req) {
+
+        Account account = accountRepository.findById(req.getAccountId())
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+
+        User user = account.getUser();
+
+        Transaction tx = Transaction.builder()
+                .description(req.getDescription())
+                .amount(req.getAmount())
+                .date(req.getDate())
+                .type(req.getType())
+                .account(account)
+                .user(user)
+                .build();
+
+        return toResponse(transactionRepository.save(tx));
     }
 
     /**
-     * Convert entity -> DTO.
-     * Centralized so that all controllers get the same shape.
+     * Get ALL transactions belonging to a user.
+     */
+    @Transactional(readOnly = true)
+    public List<TransactionResponse> getAllTransactionsForUser(String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow();
+
+        return transactionRepository
+                .findByAccountUserId(user.getId())
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    /**
+     * Get all transactions for a specific ACCOUNT, but only if it belongs to the user.
+     */
+    @Transactional(readOnly = true)
+    public List<TransactionResponse> getTransactionsByAccount(Long accountId, String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow();
+
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow();
+
+        if (!account.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("Unauthorized");
+        }
+
+        return transactionRepository
+                .findByAccountId(accountId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    /**
+     * Delete a transaction ONLY if it belongs to the logged-in user.
+     */
+    @Transactional
+    public void deleteTransaction(Long id, String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow();
+
+        Transaction tx = transactionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
+
+        if (!tx.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("Unauthorized");
+        }
+
+        transactionRepository.delete(tx);
+    }
+
+    /**
+     * Convert Entity → DTO.
      */
     private TransactionResponse toResponse(Transaction tx) {
         return TransactionResponse.builder()
@@ -92,18 +152,41 @@ public class TransactionService {
     }
 
     /**
-     * Temporary monthly summary until full reporting system is implemented.
+     * Monthly summary restricted per user.
      */
-    public MonthlySummaryResponse getMonthlySummary(int year, int month) {
+    @Transactional(readOnly = true)
+    public MonthlySummaryResponse getMonthlySummary(String username, int year, int month) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+
+        var transactions =
+                transactionRepository.findByAccountUserIdAndDateBetween(
+                        user.getId(), start, end
+                );
+
+        double totalIncome = transactions.stream()
+                .filter(t -> t.getType().name().equals("INCOME"))
+                .mapToDouble(t -> t.getAmount())
+                .sum();
+
+        double totalExpense = transactions.stream()
+                .filter(t -> t.getType().name().equals("EXPENSE"))
+                .mapToDouble(t -> t.getAmount())
+                .sum();
+
         return MonthlySummaryResponse.builder()
                 .year(year)
                 .month(month)
-                .accountId(null)
-                .totalIncome(0.0)
-                .totalExpense(0.0)
-                .netBalance(0.0)
-                .categories(Collections.emptyList())
-                .budgetStatuses(Collections.emptyList())
+                .accountId(null) // summary of ALL accounts for this user
+                .totalIncome(totalIncome)
+                .totalExpense(totalExpense)
+                .netBalance(totalIncome - totalExpense)
+                .categories(Collections.emptyList())        
+                .budgetStatuses(Collections.emptyList())    
                 .build();
     }
 }

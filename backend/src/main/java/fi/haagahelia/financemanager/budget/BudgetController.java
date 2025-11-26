@@ -4,6 +4,8 @@ import fi.haagahelia.financemanager.budget.dto.BudgetRequest;
 import fi.haagahelia.financemanager.budget.dto.BudgetResponse;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,9 +20,9 @@ public class BudgetController {
     @PostMapping
     public BudgetResponse createBudget(
             @RequestBody BudgetRequest req,
-            @RequestAttribute("username") String username
+            @AuthenticationPrincipal UserDetails principal
     ) {
-        return budgetService.createBudget(req, username);
+        return budgetService.createBudget(req, principal.getUsername());
     }
 
     @GetMapping
@@ -28,25 +30,25 @@ public class BudgetController {
             @RequestParam int year,
             @RequestParam int month,
             @RequestParam(required = false) Long accountId,
-            @RequestAttribute("username") String username
+            @AuthenticationPrincipal UserDetails principal
     ) {
-        return budgetService.getBudgets(username, accountId, year, month);
+        return budgetService.getBudgets(principal.getUsername(), accountId, year, month);
     }
 
     @PutMapping("/{id}")
     public BudgetResponse updateBudget(
             @PathVariable Long id,
             @RequestBody BudgetRequest req,
-            @RequestAttribute("username") String username
+            @AuthenticationPrincipal UserDetails principal
     ) {
-        return budgetService.updateBudget(id, req, username);
+        return budgetService.updateBudget(id, req, principal.getUsername());
     }
 
     @DeleteMapping("/{id}")
     public void deleteBudget(
             @PathVariable Long id,
-            @RequestAttribute("username") String username
+            @AuthenticationPrincipal UserDetails principal
     ) {
-        budgetService.deleteBudget(id, username);
+        budgetService.deleteBudget(id, principal.getUsername());
     }
 }

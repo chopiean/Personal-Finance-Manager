@@ -1,12 +1,10 @@
 package fi.haagahelia.financemanager.budget;
 
 import fi.haagahelia.financemanager.account.Account;
+import fi.haagahelia.financemanager.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
-/**
- * Budget entity stored in the database.
- */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,7 +18,6 @@ public class Budget {
     private Long id;
 
     private String category;
-
     private Double limitAmount;
 
     @Column(name = "budget_month")
@@ -29,7 +26,11 @@ public class Budget {
     @Column(name = "budget_year")
     private int year;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "account_id")
     private Account account;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id")
+    private User user;   
 }

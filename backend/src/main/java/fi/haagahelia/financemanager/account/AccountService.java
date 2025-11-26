@@ -4,6 +4,7 @@ import fi.haagahelia.financemanager.account.dto.AccountRequest;
 import fi.haagahelia.financemanager.account.dto.AccountResponse;
 import fi.haagahelia.financemanager.user.User;
 import fi.haagahelia.financemanager.user.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,9 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Business logic for Account operations.
- */
 @Service
 @RequiredArgsConstructor
 public class AccountService {
@@ -21,47 +19,34 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
 
-    /**
-     * Create a new account for the given username.
-     */
     @Transactional
     public AccountResponse createAccount(AccountRequest req, String username) {
 
-        // Load authenticated user
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found: " + username));
 
-        // FIX #1 — Give default account type if missing
         AccountType type = (req.getType() != null)
                 ? req.getType()
-                : AccountType.BANK;   // <- DEFAULT VALUE
-
-        // FIX #2 — Always set createdAt
-        LocalDate created = LocalDate.now();
+                : AccountType.BANK;
 
         Account account = Account.builder()
                 .name(req.getName())
                 .currency(req.getCurrency())
                 .initialBalance(req.getInitialBalance())
-                .type(type)                    // FIXED (never null)
+                .type(type)
                 .description(req.getDescription())
                 .archived(false)
-                .createdAt(created)            // FIXED (always set)
+                .createdAt(LocalDate.now())
                 .user(user)
                 .build();
 
-        Account saved = accountRepository.save(account);
-        return toResponse(saved);
+        return toResponse(accountRepository.save(account));
     }
 
-    /**
-     * Get all accounts for this user.
-     */
     @Transactional(readOnly = true)
-    public List<AccountResponse> getAccountsForUserOrAll(String username) {
+    public List<AccountResponse> getAccountsForUser(String username) {
 
-        // No more anonymous user when using JWT — always authenticated
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found: " + username));
@@ -72,9 +57,6 @@ public class AccountService {
                 .toList();
     }
 
-    /**
-     * Convert Account entity → DTO.
-     */
     private AccountResponse toResponse(Account acc) {
         return AccountResponse.builder()
                 .id(acc.getId())

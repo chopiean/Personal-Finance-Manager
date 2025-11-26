@@ -43,10 +43,12 @@ public class BudgetService {
                 .month(req.getMonth())
                 .year(req.getYear())
                 .account(acc)
+                .user(user)        
                 .build();
 
         return toResponse(budgetRepository.save(budget));
     }
+
 
     /**
      * LIST BUDGETS (Optionally by account)

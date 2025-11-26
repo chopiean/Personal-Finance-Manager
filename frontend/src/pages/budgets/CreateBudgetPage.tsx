@@ -1,32 +1,45 @@
-import { useEffect, useState } from "react";
+// src/pages/budgets/CreateBudgetPage.tsx
+import { useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
 import { useNavigate } from "react-router-dom";
+
 import type { AccountResponse } from "../../api/type";
 
 export default function CreateBudgetPage() {
-  const navigate = useNavigate();
-
-  const [category, setCategory] = useState("");
-  const [limitAmount, setLimitAmount] = useState("");
-  const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [year, setYear] = useState(new Date().getFullYear());
-  const [accountId, setAccountId] = useState<number | null>(null);
-
+  const nav = useNavigate();
   const [accounts, setAccounts] = useState<AccountResponse[]>([]);
 
+  const [form, setForm] = useState({
+    category: "",
+    limitAmount: "",
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear(),
+    accountId: "",
+  });
+
   useEffect(() => {
-    apiFetch<AccountResponse[]>("/accounts").then(setAccounts);
+    (async () => {
+      const data = await apiFetch<AccountResponse[]>("/accounts");
+      setAccounts(data);
+    })();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
     const payload = {
-      category,
-      limitAmount: Number(limitAmount),
-      month,
-      year,
-      accountId,
+      category: form.category,
+      limitAmount: Number(form.limitAmount),
+      month: Number(form.month),
+      year: Number(form.year),
+      accountId: Number(form.accountId),
     };
 
     await apiFetch("/budgets", {
@@ -34,83 +47,169 @@ export default function CreateBudgetPage() {
       body: JSON.stringify(payload),
     });
 
-    navigate("/budgets");
-  };
+    alert("Budget created!");
+    nav("/budgets");
+  }
 
   return (
-    <section className="card">
-      <h1 className="page-title">Create Budget</h1>
+    <div
+      style={{
+        padding: "40px 24px",
+        maxWidth: 720,
+        margin: "0 auto",
+      }}
+    >
+      {/* Title */}
+      <h1
+        style={{
+          fontSize: 34,
+          fontWeight: 700,
+          marginBottom: 6,
+          letterSpacing: "-0.5px",
+        }}
+      >
+        Create Budget
+      </h1>
+      <p style={{ color: "#6b7280", marginBottom: 28, fontSize: 16 }}>
+        Set a spending limit for a category this month.
+      </p>
 
-      <form onSubmit={handleSubmit} className="form-grid">
-        <div>
-          <label className="field-label">Category</label>
-          <input
-            className="input"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            placeholder="Shopping, Groceries, Travel..."
-            required
-          />
-        </div>
+      {/* Main Card */}
+      <div
+        style={{
+          background: "white",
+          padding: "32px 28px",
+          borderRadius: 20,
+          boxShadow: "0 12px 32px rgba(0,0,0,0.08)",
+          border: "1px solid #eef0f2",
+        }}
+      >
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+          }}
+        >
+          {/* Category */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label className="field-label">Category</label>
+            <input
+              className="input"
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              placeholder="Groceries, Transport, Shopping…"
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "1px solid #d1d5db",
+                fontSize: 15,
+              }}
+            />
+          </div>
 
-        <div>
-          <label className="field-label">Limit (€)</label>
-          <input
-            className="input"
-            type="number"
-            value={limitAmount}
-            onChange={(e) => setLimitAmount(e.target.value)}
-            required
-          />
-        </div>
+          {/* Limit */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label className="field-label">Limit (€)</label>
+            <input
+              className="input"
+              type="number"
+              name="limitAmount"
+              value={form.limitAmount}
+              onChange={handleChange}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "1px solid #d1d5db",
+                fontSize: 15,
+              }}
+            />
+          </div>
 
-        <div>
-          <label className="field-label">Month</label>
-          <input
-            className="input"
-            type="number"
-            min={1}
-            max={12}
-            value={month}
-            onChange={(e) => setMonth(Number(e.target.value))}
-          />
-        </div>
+          {/* Month */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label className="field-label">Month</label>
+            <input
+              className="input"
+              type="number"
+              name="month"
+              min="1"
+              max="12"
+              value={form.month}
+              onChange={handleChange}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "1px solid #d1d5db",
+                fontSize: 15,
+              }}
+            />
+          </div>
 
-        <div>
-          <label className="field-label">Year</label>
-          <input
-            className="input"
-            type="number"
-            min={2020}
-            max={2100}
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-          />
-        </div>
+          {/* Year */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label className="field-label">Year</label>
+            <input
+              className="input"
+              type="number"
+              name="year"
+              value={form.year}
+              onChange={handleChange}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "1px solid #d1d5db",
+                fontSize: 15,
+              }}
+            />
+          </div>
 
-        <div>
-          <label className="field-label">Account</label>
-          <select
-            className="select"
-            value={accountId ?? ""}
-            onChange={(e) => setAccountId(Number(e.target.value))}
-            required
+          {/* Account */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label className="field-label">Account</label>
+            <select
+              className="select"
+              name="accountId"
+              value={form.accountId}
+              onChange={handleChange}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "1px solid #d1d5db",
+                fontSize: 15,
+              }}
+            >
+              <option value="">Select account…</option>
+              {accounts.map((acc) => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.name} ({acc.currency})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Submit button */}
+          <button
+            type="submit"
+            style={{
+              marginTop: 10,
+              background: "linear-gradient(135deg, #4f46e5, #635bff)",
+              color: "white",
+              border: "none",
+              padding: "14px",
+              borderRadius: 14,
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: "pointer",
+              boxShadow: "0 6px 16px rgba(99,90,255,0.35)",
+            }}
           >
-            <option value="" disabled>
-              Select account…
-            </option>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name} — {a.currency}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button className="btn btn-primary" type="submit">
-          Create Budget
-        </button>
-      </form>
-    </section>
+            Create Budget
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }

@@ -29,8 +29,9 @@ export default function Layout() {
       {/* SIDEBAR */}
       <aside
         style={{
-          width: 260,
-          padding: "28px 20px 24px",
+          width: 320,
+          minWidth: 320,
+          padding: "32px 26px 28px",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
@@ -43,7 +44,7 @@ export default function Layout() {
         <div>
           <h1
             style={{
-              fontSize: 22,
+              fontSize: 32,
               fontWeight: 700,
               marginBottom: 24,
               color: "#0f172a",
@@ -73,7 +74,7 @@ export default function Layout() {
                   style={{
                     padding: "10px 14px",
                     borderRadius: 12,
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: active ? 600 : 400,
                     color: active ? "#0f172a" : "#475569",
                     backgroundColor: active ? "#e5f2ff" : "transparent",
@@ -102,13 +103,13 @@ export default function Layout() {
           onClick={logout}
           style={{
             width: "100%",
-            padding: "10px 14px",
+            padding: "12px 14px",
             borderRadius: 999,
             border: "none",
             background:
               "linear-gradient(135deg,rgba(248,113,113,1),rgba(239,68,68,1))",
             color: "white",
-            fontSize: 14,
+            fontSize: 20,
             fontWeight: 600,
             cursor: "pointer",
             boxShadow: "0 8px 18px rgba(248,113,113,0.35)",

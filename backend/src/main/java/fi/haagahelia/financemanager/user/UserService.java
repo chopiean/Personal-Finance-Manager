@@ -25,7 +25,7 @@ public class UserService {
     public UserResponse register(UserRegisterRequest request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("This email is already registered.");
+            throw new IllegalArgumentException("This email is already registered.");
         }
 
         User user = new User();

@@ -32,15 +32,17 @@ public class AccountController {
             @Valid @RequestBody AccountRequest request,
             @AuthenticationPrincipal UserDetails principal
     ) {
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        // TEMPORARY: allow development without login
+        String username = (principal != null)
+                ? principal.getUsername()
+                : "demo"; 
 
         AccountResponse created =
-                accountService.createAccount(request, principal.getUsername());
+                accountService.createAccount(request, username);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
+
 
     /**
      * Get accounts.
@@ -49,10 +51,14 @@ public class AccountController {
     public List<AccountResponse> getAccounts(
             @AuthenticationPrincipal UserDetails principal
     ) {
-        String username = (principal != null ? principal.getUsername() : null);
+        String username = (principal != null)
+                ? principal.getUsername()
+                : "demo";
+
         return accountService.getAccountsForUserOrAll(username)
-                            .stream()
-                            .sorted(Comparator.comparing(AccountResponse::getName))
-                            .toList();
+                .stream()
+                .sorted(Comparator.comparing(AccountResponse::getName))
+                .toList();
     }
+
 }

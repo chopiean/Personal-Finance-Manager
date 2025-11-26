@@ -1,19 +1,27 @@
 import "./App.css";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, useLocation } from "react-router-dom";
 import AppRouter from "./router/AppRouter";
 import Navbar from "./components/Navbar";
 
-function App() {
+function AppContent() {
+  const location = useLocation();
+  const hideNavbar =
+    location.pathname === "/login" || location.pathname === "/register";
+
   return (
-    <BrowserRouter>
-      <div className="app-shell">
-        <Navbar />
-        <main className="app-main">
-          <AppRouter />
-        </main>
-      </div>
-    </BrowserRouter>
+    <div className="app-shell">
+      {!hideNavbar && <Navbar />}
+      <main className="app-main">
+        <AppRouter />
+      </main>
+    </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  );
+}

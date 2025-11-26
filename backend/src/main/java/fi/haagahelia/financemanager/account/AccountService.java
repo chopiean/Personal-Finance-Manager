@@ -26,18 +26,28 @@ public class AccountService {
      */
     @Transactional
     public AccountResponse createAccount(AccountRequest req, String username) {
+
+        // Load authenticated user
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found: " + username));
+
+        // FIX #1 — Give default account type if missing
+        AccountType type = (req.getType() != null)
+                ? req.getType()
+                : AccountType.BANK;   // <- DEFAULT VALUE
+
+        // FIX #2 — Always set createdAt
+        LocalDate created = LocalDate.now();
 
         Account account = Account.builder()
                 .name(req.getName())
                 .currency(req.getCurrency())
                 .initialBalance(req.getInitialBalance())
-                .type(req.getType())
+                .type(type)                    // FIXED (never null)
                 .description(req.getDescription())
                 .archived(false)
-                .createdAt(LocalDate.now())
+                .createdAt(created)            // FIXED (always set)
                 .user(user)
                 .build();
 
@@ -45,18 +55,16 @@ public class AccountService {
         return toResponse(saved);
     }
 
+    /**
+     * Get all accounts for this user.
+     */
     @Transactional(readOnly = true)
-    public List<AccountResponse> getAccountsForUserOrAll(String usernameOrNull) {
-        if (usernameOrNull == null || "anonymousUser".equals(usernameOrNull)) {
-            return accountRepository.findAll()
-                    .stream()
-                    .map(this::toResponse)
-                    .toList();
-        }
+    public List<AccountResponse> getAccountsForUserOrAll(String username) {
 
-        User user = userRepository.findByUsername(usernameOrNull)
+        // No more anonymous user when using JWT — always authenticated
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("User not found: " + usernameOrNull));
+                        new IllegalArgumentException("User not found: " + username));
 
         return accountRepository.findByUser(user)
                 .stream()
@@ -67,17 +75,17 @@ public class AccountService {
     /**
      * Convert Account entity → DTO.
      */
-    private AccountResponse toResponse(Account account) {
+    private AccountResponse toResponse(Account acc) {
         return AccountResponse.builder()
-                .id(account.getId())
-                .name(account.getName())
-                .currency(account.getCurrency())
-                .initialBalance(account.getInitialBalance())
-                .type(account.getType())
-                .description(account.getDescription())
-                .archived(account.isArchived())
-                .createdAt(account.getCreatedAt())
-                .userId(account.getUser().getId())
+                .id(acc.getId())
+                .name(acc.getName())
+                .currency(acc.getCurrency())
+                .initialBalance(acc.getInitialBalance())
+                .type(acc.getType())
+                .description(acc.getDescription())
+                .archived(acc.isArchived())
+                .createdAt(acc.getCreatedAt())
+                .userId(acc.getUser().getId())
                 .build();
     }
 }

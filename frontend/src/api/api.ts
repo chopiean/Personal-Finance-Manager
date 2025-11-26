@@ -1,22 +1,32 @@
-export const API_BASE = "http://localhost:8080/api";
+const API_BASE = "http://localhost:8080/api";
 
-export async function apiFetch<T = unknown>(
+export async function apiFetch<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const token = localStorage.getItem("token");
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(API_BASE + path, {
     ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
+    headers,
   });
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || `Request failed: ${res.status}`);
+    throw new Error(text || res.statusText);
   }
 
-  return res.json() as Promise<T>;
+  // If nothing returned (204)
+  if (res.status === 204) return null as T;
+
+  return (await res.json()) as T;
 }

@@ -2,6 +2,10 @@ import { useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
 import { useNavigate } from "react-router-dom";
 
+type AuthResponse = {
+  token: string;
+};
+
 export default function LoginPage() {
   const nav = useNavigate();
   const [username, setUser] = useState("");
@@ -13,12 +17,15 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const user = await apiFetch("/auth/login", {
+      const { token } = await apiFetch<AuthResponse>("/auth/login", {
         method: "POST",
         body: JSON.stringify({ username, password }),
       });
 
-      localStorage.setItem("user", JSON.stringify(user));
+      // SAVE JWT
+      localStorage.setItem("token", token);
+
+      // Redirect to dashboard or home
       nav("/");
     } catch (err) {
       const message =
@@ -35,14 +42,13 @@ export default function LoginPage() {
         position: "fixed",
         inset: 0,
         display: "flex",
-        flexDirection: "column", // 👈 IMPORTANT FIX
+        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
         background: "linear-gradient(145deg, #f9fafb, #eef1f4)",
         padding: "20px",
       }}
     >
-      {/* Login Card */}
       <div
         style={{
           width: "100%",
@@ -85,12 +91,7 @@ export default function LoginPage() {
               marginBottom: 14,
               fontSize: 15,
               outline: "none",
-              transition: "0.2s",
             }}
-            onFocus={(e) =>
-              (e.target.style.borderColor = "rgba(34,197,94,0.7)")
-            }
-            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
           />
 
           <input
@@ -107,12 +108,7 @@ export default function LoginPage() {
               marginBottom: 22,
               fontSize: 15,
               outline: "none",
-              transition: "0.2s",
             }}
-            onFocus={(e) =>
-              (e.target.style.borderColor = "rgba(34,197,94,0.7)")
-            }
-            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
           />
 
           <button
@@ -129,21 +125,13 @@ export default function LoginPage() {
               cursor: "pointer",
               border: "none",
               boxShadow: "0 5px 15px rgba(22,163,74,0.25)",
-              transition: "0.2s",
             }}
-            onMouseEnter={(e) =>
-              ((e.target as HTMLButtonElement).style.opacity = "0.9")
-            }
-            onMouseLeave={(e) =>
-              ((e.target as HTMLButtonElement).style.opacity = "1")
-            }
           >
             {loading ? "Logging in…" : "Login"}
           </button>
         </form>
       </div>
 
-      {/* Signup Line */}
       <p
         style={{
           marginTop: 24,
@@ -159,14 +147,7 @@ export default function LoginPage() {
             color: "#0ea5e9",
             cursor: "pointer",
             fontWeight: 600,
-            transition: "0.2s",
           }}
-          onMouseEnter={(e) =>
-            ((e.target as HTMLSpanElement).style.opacity = "0.8")
-          }
-          onMouseLeave={(e) =>
-            ((e.target as HTMLSpanElement).style.opacity = "1")
-          }
         >
           Sign up
         </span>

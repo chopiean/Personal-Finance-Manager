@@ -58,9 +58,11 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                           DaoAuthenticationProvider provider) throws Exception {
+                                        DaoAuthenticationProvider provider,
+                                        JwtAuthenticationFilter jwtAuthFilter) throws Exception {
 
         http.csrf(csrf -> csrf.disable());
+
         http.authenticationProvider(provider);
 
         http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
@@ -73,23 +75,28 @@ public class SecurityConfig {
             c.addAllowedOrigin("http://localhost:5173");
             c.addAllowedMethod("*");
             c.addAllowedHeader("*");
+            c.addExposedHeader("Authorization");
             return c;
         }));
 
         http.sessionManagement(s -> s
                 .sessionCreationPolicy(
-                        org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED
+                        org.springframework.security.config.http.SessionCreationPolicy.STATELESS
                 )
         );
 
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login",
-                                 "/api/auth/register",
-                                 "/h2-console/**")
+                                "/api/auth/register",
+                                "/h2-console/**")
                 .permitAll()
                 .anyRequest().authenticated()
         );
 
+        http.addFilterBefore(jwtAuthFilter,
+                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
+
 }

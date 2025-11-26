@@ -1,7 +1,6 @@
 package fi.haagahelia.financemanager.user;
 
 import fi.haagahelia.financemanager.user.dto.UserRegisterRequest;
-import fi.haagahelia.financemanager.user.dto.UserLoginRequest;
 import fi.haagahelia.financemanager.user.dto.UserResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -11,13 +10,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * REST API for user authentication and profile handling.
- */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -27,9 +21,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
 
-    /**
-     * Returns the currently authenticated user.
-     */
+    // CURRENT LOGGED-IN USER
     @GetMapping("/me")
     public UserResponse me(@AuthenticationPrincipal UserDetails principal) {
         if (principal == null) throw new RuntimeException("Not authenticated");

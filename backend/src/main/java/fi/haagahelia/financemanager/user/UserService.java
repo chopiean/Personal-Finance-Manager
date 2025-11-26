@@ -18,6 +18,9 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // ----------------------
+    // REGISTER NEW USER
+    // ----------------------
     @Transactional
     public UserResponse register(UserRegisterRequest request) {
 
@@ -31,11 +34,25 @@ public class UserService {
         user.setRole("ROLE_USER");
 
         User saved = userRepository.save(user);
+        return toResponse(saved);
+    }
 
+    // ----------------------
+    // GET USER BY ID
+    // ----------------------
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    // ----------------------
+    // MAP ENTITY → DTO
+    // ----------------------
+    public UserResponse toResponse(User user) {
         return new UserResponse(
-                saved.getId(),
-                saved.getUsername(),
-                saved.getRole()
+                user.getId(),
+                user.getUsername(),
+                user.getRole()
         );
     }
 }

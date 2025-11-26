@@ -2,41 +2,51 @@ package fi.haagahelia.financemanager.budget;
 
 import fi.haagahelia.financemanager.budget.dto.BudgetRequest;
 import fi.haagahelia.financemanager.budget.dto.BudgetResponse;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * REST API for managing budgets.
- */
 @RestController
-@RequestMapping("/api/budgets")   
+@RequestMapping("/api/budgets")
 @RequiredArgsConstructor
 public class BudgetController {
 
     private final BudgetService budgetService;
 
-    /**
-     * Create a new monthly budget.
-     */
     @PostMapping
-    public ResponseEntity<BudgetResponse> create(@RequestBody BudgetRequest req) {
-        BudgetResponse created = budgetService.create(req);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public BudgetResponse createBudget(
+            @RequestBody BudgetRequest req,
+            @RequestAttribute("username") String username
+    ) {
+        return budgetService.createBudget(req, username);
     }
 
-    /**
-     * Get all budgets for a specific account + month/year
-     */
-    @GetMapping("/{accountId}/{year}/{month}")
-    public List<BudgetResponse> getByAccount(
-            @PathVariable Long accountId,
-            @PathVariable int year,
-            @PathVariable int month
+    @GetMapping
+    public List<BudgetResponse> getBudgets(
+            @RequestParam int year,
+            @RequestParam int month,
+            @RequestParam(required = false) Long accountId,
+            @RequestAttribute("username") String username
     ) {
-        return budgetService.getByAccount(accountId, month, year);
+        return budgetService.getBudgets(username, accountId, year, month);
+    }
+
+    @PutMapping("/{id}")
+    public BudgetResponse updateBudget(
+            @PathVariable Long id,
+            @RequestBody BudgetRequest req,
+            @RequestAttribute("username") String username
+    ) {
+        return budgetService.updateBudget(id, req, username);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteBudget(
+            @PathVariable Long id,
+            @RequestAttribute("username") String username
+    ) {
+        budgetService.deleteBudget(id, username);
     }
 }

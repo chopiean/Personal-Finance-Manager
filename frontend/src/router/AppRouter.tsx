@@ -7,6 +7,7 @@ import DashboardPage from "../pages/dashboard/DashboardPage";
 import AccountsPage from "../pages/accounts/AccountsPage";
 import TransactionsPage from "../pages/transactions/TransactionsPage";
 import BudgetsPage from "../pages/budgets/BudgetsPage";
+import CreateBudgetPage from "../pages/budgets/CreateBudgetPage";
 
 import ProtectedRoute from "../components/ProtectedRoute";
 import Layout from "../components/Layout";
@@ -30,6 +31,7 @@ export default function AppRouter() {
         <Route path="accounts" element={<AccountsPage />} />
         <Route path="transactions" element={<TransactionsPage />} />
         <Route path="budgets" element={<BudgetsPage />} />
+        <Route path="/budgets/new" element={<CreateBudgetPage />} />
       </Route>
 
       {/* Redirect old paths */}

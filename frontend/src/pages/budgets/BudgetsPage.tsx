@@ -1,11 +1,14 @@
 // src/pages/budgets/BudgetsPage.tsx
 import { useEffect, useState } from "react";
 import { apiFetch } from "../../api/api";
+import { useNavigate } from "react-router-dom";
+
 import type { MonthlySummaryResponse, BudgetStatus } from "../../api/type";
 
 export default function BudgetsPage() {
   const [budgets, setBudgets] = useState<BudgetStatus[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const today = new Date();
@@ -75,6 +78,12 @@ export default function BudgetsPage() {
           ))}
         </div>
       )}
+      <button
+        className="btn btn-primary"
+        onClick={() => navigate("/budgets/new")}
+      >
+        Add Budget
+      </button>
     </section>
   );
 }

@@ -1,87 +1,135 @@
 package fi.haagahelia.financemanager.budget;
 
-import fi.haagahelia.financemanager.account.Account;
-import fi.haagahelia.financemanager.account.AccountRepository;
-import fi.haagahelia.financemanager.transaction.TransactionRepository;
-import fi.haagahelia.financemanager.transaction.TransactionType;
 import fi.haagahelia.financemanager.budget.dto.BudgetRequest;
 import fi.haagahelia.financemanager.budget.dto.BudgetResponse;
+import fi.haagahelia.financemanager.account.Account;
+import fi.haagahelia.financemanager.account.AccountRepository;
+import fi.haagahelia.financemanager.user.User;
+import fi.haagahelia.financemanager.user.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Business logic for Budgets.
- */
 @Service
 @RequiredArgsConstructor
 public class BudgetService {
 
     private final BudgetRepository budgetRepository;
-    private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final UserRepository userRepository;
 
     /**
-     * Create a new budget.
+     * CREATE BUDGET
      */
-    public BudgetResponse create(BudgetRequest req) {
+    @Transactional
+    public BudgetResponse createBudget(BudgetRequest req, String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         Account acc = accountRepository.findById(req.getAccountId())
                 .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
-        Budget b = Budget.builder()
+        if (!acc.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("Account does not belong to user");
+        }
+
+        Budget budget = Budget.builder()
                 .category(req.getCategory())
                 .limitAmount(req.getLimitAmount())
-                .account(acc)
                 .month(req.getMonth())
                 .year(req.getYear())
+                .account(acc)
                 .build();
 
-        Budget saved = budgetRepository.save(b);
-
-        return toResponse(saved);
+        return toResponse(budgetRepository.save(budget));
     }
 
     /**
-     * Read budgets for a specific account + month + year.
+     * LIST BUDGETS (Optionally by account)
      */
-    public List<BudgetResponse> getByAccount(Long id, int month, int year) {
-        return budgetRepository.findByAccountIdAndMonthAndYear(id, month, year)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    @Transactional(readOnly = true)
+    public List<BudgetResponse> getBudgets(String username, Long accountId, int year, int month) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow();
+
+        List<Budget> budgets;
+
+        if (accountId != null) {
+            budgets = budgetRepository.findByAccountIdAndYearAndMonth(accountId, year, month);
+        } else {
+            budgets = budgetRepository.findByAccountUserIdAndYearAndMonth(user.getId(), year, month);
+        }
+
+        return budgets.stream().map(this::toResponse).toList();
     }
 
     /**
-     * Convert entity → DTO and calculate dynamic metrics.
+     * UPDATE BUDGET
      */
-    private BudgetResponse toResponse(Budget b) {
+    @Transactional
+    public BudgetResponse updateBudget(Long id, BudgetRequest req, String username) {
 
-        // Calculate expenses for the month + year
-        Double used = transactionRepository
-                .findByAccountId(b.getAccount().getId())
-                .stream()
-                .filter(t -> t.getType() == TransactionType.EXPENSE)
-                .filter(t -> t.getDate().getMonthValue() == b.getMonth())
-                .filter(t -> t.getDate().getYear() == b.getYear())
-                .mapToDouble(t -> t.getAmount())
-                .sum();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow();
 
-        Double remaining = b.getLimitAmount() - used;
-        Double usage = (used / b.getLimitAmount()) * 100;
+        Budget budget = budgetRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Budget not found"));
 
+        if (!budget.getAccount().getUser().getId().equals(user.getId())) {
+            throw new SecurityException("Unauthorized");
+        }
+
+        Account acc = accountRepository.findById(req.getAccountId())
+                .orElseThrow();
+
+        if (!acc.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("Unauthorized account");
+        }
+
+        budget.setCategory(req.getCategory());
+        budget.setLimitAmount(req.getLimitAmount());
+        budget.setMonth(req.getMonth());
+        budget.setYear(req.getYear());
+        budget.setAccount(acc);
+
+        return toResponse(budgetRepository.save(budget));
+    }
+
+    /**
+     * DELETE BUDGET
+     */
+    @Transactional
+    public void deleteBudget(Long id, String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow();
+
+        Budget budget = budgetRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Budget not found"));
+
+        if (!budget.getAccount().getUser().getId().equals(user.getId())) {
+            throw new SecurityException("Unauthorized");
+        }
+
+        budgetRepository.delete(budget);
+    }
+
+    /**
+     * Convert entity → DTO
+     */
+    private BudgetResponse toResponse(Budget budget) {
         return BudgetResponse.builder()
-                .id(b.getId())
-                .category(b.getCategory())
-                .limitAmount(b.getLimitAmount())
-                .usedAmount(used)
-                .remaining(remaining)
-                .usagePercent(usage)
-                .accountId(b.getAccount().getId())
-                .accountName(b.getAccount().getName())
-                .month(b.getMonth())
-                .year(b.getYear())
+                .id(budget.getId())
+                .category(budget.getCategory())
+                .limitAmount(budget.getLimitAmount())
+                .month(budget.getMonth())
+                .year(budget.getYear())
+                .accountId(budget.getAccount().getId())
                 .build();
     }
 }

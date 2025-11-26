@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../../api/api";
 
-// Types
+// ----- Types -----
 type DashboardSummary = {
   totalBalance: number;
   income: number;
@@ -11,9 +11,10 @@ type DashboardSummary = {
 
 type TransactionItem = {
   id: number;
-  category: string;
+  description: string;
   amount: number;
   date: string;
+  type: "INCOME" | "EXPENSE";
 };
 
 type DashboardResponse = {
@@ -64,82 +65,30 @@ export default function DashboardPage() {
         }}
       >
         {/* Total Balance */}
-        <div
-          style={{
-            padding: 24,
-            borderRadius: 20,
-            background: "white",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-            border: "1px solid #f1f1f1",
-          }}
-        >
-          <p style={{ color: "#6b7280" }}>Total Balance</p>
-          <h2 style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>
-            €{summary?.totalBalance.toFixed(2) ?? "0.00"}
-          </h2>
-        </div>
+        <DashboardCard
+          title="Total Balance"
+          value={`€${summary?.totalBalance.toFixed(2) ?? "0.00"}`}
+        />
 
         {/* Income */}
-        <div
-          style={{
-            padding: 24,
-            borderRadius: 20,
-            background: "white",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-            border: "1px solid #f1f1f1",
-          }}
-        >
-          <p style={{ color: "#6b7280" }}>Income (This Month)</p>
-          <h3
-            style={{
-              fontSize: 26,
-              fontWeight: 600,
-              marginTop: 6,
-              color: "#16a34a",
-            }}
-          >
-            +€{summary?.income.toFixed(2) ?? "0.00"}
-          </h3>
-        </div>
+        <DashboardCard
+          title="Income (This Month)"
+          value={`+€${summary?.income.toFixed(2) ?? "0.00"}`}
+          color="#16a34a"
+        />
 
         {/* Expenses */}
-        <div
-          style={{
-            padding: 24,
-            borderRadius: 20,
-            background: "white",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-            border: "1px solid #f1f1f1",
-          }}
-        >
-          <p style={{ color: "#6b7280" }}>Expenses (This Month)</p>
-          <h3
-            style={{
-              fontSize: 26,
-              fontWeight: 600,
-              marginTop: 6,
-              color: "#dc2626",
-            }}
-          >
-            -€{summary?.expenses.toFixed(2) ?? "0.00"}
-          </h3>
-        </div>
+        <DashboardCard
+          title="Expenses (This Month)"
+          value={`-€${summary?.expenses.toFixed(2) ?? "0.00"}`}
+          color="#dc2626"
+        />
 
         {/* Savings */}
-        <div
-          style={{
-            padding: 24,
-            borderRadius: 20,
-            background: "white",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-            border: "1px solid #f1f1f1",
-          }}
-        >
-          <p style={{ color: "#6b7280" }}>Savings Rate</p>
-          <h3 style={{ fontSize: 26, fontWeight: 600, marginTop: 6 }}>
-            {summary?.savingsRate ?? 0}%
-          </h3>
-        </div>
+        <DashboardCard
+          title="Savings Rate"
+          value={`${summary?.savingsRate ?? 0}%`}
+        />
       </div>
 
       {/* Recent Transactions */}
@@ -177,24 +126,54 @@ export default function DashboardPage() {
               justifyContent: "space-between",
             }}
           >
+            {/* Left side */}
             <div>
-              <strong>{t.category}</strong>
+              <strong>{t.description}</strong>
               <p style={{ color: "#6b7280", marginTop: 4, fontSize: 14 }}>
                 {t.date}
               </p>
             </div>
 
+            {/* Right side: amount */}
             <div
               style={{
                 fontWeight: 600,
-                color: t.amount >= 0 ? "#16a34a" : "#dc2626",
+                color: t.type === "EXPENSE" ? "#dc2626" : "#16a34a",
               }}
             >
-              {t.amount >= 0 ? "+" : "-"}€{Math.abs(t.amount).toFixed(2)}
+              {t.type === "EXPENSE" ? "-" : "+"}€{t.amount.toFixed(2)}
             </div>
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ----- Reusable Dashboard Card Component ----- */
+function DashboardCard({
+  title,
+  value,
+  color = "#111827",
+}: {
+  title: string;
+  value: string;
+  color?: string;
+}) {
+  return (
+    <div
+      style={{
+        padding: 24,
+        borderRadius: 20,
+        background: "white",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+        border: "1px solid #f1f1f1",
+      }}
+    >
+      <p style={{ color: "#6b7280" }}>{title}</p>
+      <h2 style={{ fontSize: 32, fontWeight: 700, marginTop: 6, color }}>
+        {value}
+      </h2>
     </div>
   );
 }

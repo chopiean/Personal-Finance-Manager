@@ -8,6 +8,8 @@ import fi.haagahelia.financemanager.report.dto.MonthlySummaryResponse;
 import fi.haagahelia.financemanager.transaction.Transaction;
 import fi.haagahelia.financemanager.transaction.TransactionRepository;
 import fi.haagahelia.financemanager.transaction.TransactionType;
+import fi.haagahelia.financemanager.user.User;
+import fi.haagahelia.financemanager.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,52 +19,63 @@ import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Business logic for generating financial reports.
- */
 @Service
 @RequiredArgsConstructor
 public class ReportService {
 
     private final TransactionRepository transactionRepository;
     private final BudgetRepository budgetRepository;
+    private final UserRepository userRepository;
 
-    /**
-     * Generate an advanced monthly report.
-     */
     @Transactional(readOnly = true)
-    public MonthlySummaryResponse getMonthlySummary(int year, int month, Long accountId) {
+    public MonthlySummaryResponse getMonthlySummary(
+            int year,
+            int month,
+            Long accountId,
+            String username
+    ) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
         YearMonth ym = YearMonth.of(year, month);
         LocalDate start = ym.atDay(1);
         LocalDate end = ym.atEndOfMonth();
 
-        // 1) Load transactions
-        List<Transaction> txs = (accountId == null)
-                ? transactionRepository.findByDateBetween(start, end)
-                : transactionRepository.findByAccountIdAndDateBetween(accountId, start, end);
+        // --- 1. LOAD USER TRANSACTIONS ---
+        List<Transaction> txs;
+        if (accountId == null) {
+            txs = transactionRepository.findByAccountUserIdAndDateBetween(
+                    user.getId(), start, end
+            );
+        } else {
+            txs = transactionRepository.findByAccountIdAndDateBetween(
+                    accountId, start, end
+            );
+        }
 
-        // 2) Calculate totals
-        double totalIncome = txs.stream()
+        // --- 2. SUMMARIZE TOTALS ---
+        double income = txs.stream()
                 .filter(t -> t.getType() == TransactionType.INCOME)
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 
-        double totalExpense = txs.stream()
+        double expense = txs.stream()
                 .filter(t -> t.getType() == TransactionType.EXPENSE)
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 
-        double net = totalIncome - totalExpense;
+        double net = income - expense;
 
-        // 3) Category summary
-        Map<String, CategorySummary> byCategory = new HashMap<>();
+        // --- 3. CATEGORY SUMMARY ---
+        Map<String, CategorySummary> categories = new HashMap<>();
 
         for (Transaction t : txs) {
             String category = Optional.ofNullable(t.getDescription())
                     .filter(s -> !s.isBlank())
                     .orElse("Uncategorized");
 
-            CategorySummary summary = byCategory.computeIfAbsent(
+            CategorySummary summary = categories.computeIfAbsent(
                     category,
                     c -> CategorySummary.builder()
                             .category(c)
@@ -81,16 +94,26 @@ public class ReportService {
             summary.setNet(summary.getTotalIncome() - summary.getTotalExpense());
         }
 
-        List<CategorySummary> categoryList = byCategory.values()
+        List<CategorySummary> categoryList = categories.values()
                 .stream()
                 .sorted(Comparator.comparing(CategorySummary::getCategory))
                 .toList();
 
+        // --- 4. LOAD USER BUDGETS ONLY ---
         // 4) Budget comparison
-        List<Budget> budgets = (accountId == null)
-                ? budgetRepository.findByYearAndMonth(year, month)
-                : budgetRepository.findByAccountIdAndYearAndMonth(accountId, year, month);
+        List<Budget> budgets;
 
+                if (accountId != null) {
+                // Load budgets for a specific account
+                budgets = budgetRepository.findByAccountIdAndYearAndMonth(accountId, year, month);
+                } else {
+                // Load all budgets for the logged-in user
+                budgets = budgetRepository.findByAccountUserIdAndYearAndMonth(
+                        user.getId(), year, month
+                );
+        }
+
+        // group expenses by category
         Map<String, Double> expenseByCategory = txs.stream()
                 .filter(t -> t.getType() == TransactionType.EXPENSE)
                 .collect(Collectors.groupingBy(
@@ -100,6 +123,7 @@ public class ReportService {
                         Collectors.summingDouble(Transaction::getAmount)
                 ));
 
+        // build budget statuses
         List<BudgetStatus> budgetStatuses = budgets.stream()
                 .map(b -> {
                     String cat = Optional.ofNullable(b.getCategory())
@@ -121,13 +145,13 @@ public class ReportService {
                 .sorted(Comparator.comparing(BudgetStatus::getCategory))
                 .toList();
 
-        // 5) Build summary
+        // --- 5. FINAL RESPONSE ---
         return MonthlySummaryResponse.builder()
                 .year(year)
                 .month(month)
                 .accountId(accountId)
-                .totalIncome(totalIncome)
-                .totalExpense(totalExpense)
+                .totalIncome(income)
+                .totalExpense(expense)
                 .netBalance(net)
                 .categories(categoryList)
                 .budgetStatuses(budgetStatuses)

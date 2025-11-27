@@ -20,10 +20,11 @@ public class CsvImportController {
      */
     @PostMapping("/import")
     public ResponseEntity<?> uploadCsv(
-        @RequestParam("file") MultipartFile file,
-        @RequestParam("accountId") Long accountId
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("accountId") Long accountId
     ) {
         int count = csvImportService.importCsv(file, accountId);
         return ResponseEntity.ok(count + " transactions imported");
     }
+
 }

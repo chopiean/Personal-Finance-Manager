@@ -1,68 +1,68 @@
 package fi.haagahelia.financemanager.csv;
 
-import fi.haagahelia.financemanager.transaction.TransactionService;
-import fi.haagahelia.financemanager.transaction.dto.TransactionRequest;
 import fi.haagahelia.financemanager.transaction.TransactionType;
+import fi.haagahelia.financemanager.transaction.dto.TransactionRequest;
+import fi.haagahelia.financemanager.transaction.TransactionService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
-/**
- * Handles reading CSV files and importing them as Transactions.
- */
+
 @Service
 @RequiredArgsConstructor
 public class CsvImportService {
 
     private final TransactionService transactionService;
 
-    /**
-     * Reads CSV file and imports all rows as transactions.
-     * CSV format (no accountId column):
-     * date,description,amount,type
-     */
     public int importCsv(MultipartFile file, Long accountId) {
-        int count = 0;
-    
-        try (var reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-    
-            reader.readLine(); // Skip header
+        int imported = 0;
+
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)
+        )) {
             String line;
-    
-            while ((line = reader.readLine()) != null) {
-    
-                String[] parts = line.split(",");
-    
-                if (parts.length < 4) {
-                    throw new RuntimeException("Invalid CSV format: " + line);
+            boolean first = true;
+
+            while ((line = br.readLine()) != null) {
+
+                if (first) { 
+                    first = false; 
+                    continue; 
                 }
-    
-                LocalDate date = LocalDate.parse(parts[0].trim());
-                String description = parts[1].trim();
-                Double amount = Double.parseDouble(parts[2].trim());
-                TransactionType type = TransactionType.valueOf(parts[3].trim().toUpperCase());
-    
+
+                String[] columns = line.split(",");
+
+                if (columns.length < 5) continue;
+
+                String dateStr = columns[0].trim();
+                String description = columns[1].trim();
+                String category = columns[2].trim();
+                double amount = Double.parseDouble(columns[3].trim());
+                TransactionType type = TransactionType.valueOf(columns[4].trim());
+
                 TransactionRequest req = TransactionRequest.builder()
                         .description(description)
+                        .category(category)
                         .amount(amount)
-                        .date(date)
+                        .date(LocalDate.parse(dateStr))
                         .type(type)
-                        .accountId(accountId)   
+                        .accountId(accountId)
                         .build();
-    
+
                 transactionService.createTransactionFromCsv(req);
-                count++;
+                imported++;
             }
-    
+
         } catch (Exception e) {
             throw new RuntimeException("Failed to import CSV: " + e.getMessage());
         }
-    
-        return count;
+
+        return imported;
     }
-    
 }

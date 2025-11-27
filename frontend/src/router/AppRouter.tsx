@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
+import WelcomePage from "../pages/auth/WelcomePage";
 
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import AccountsPage from "../pages/accounts/AccountsPage";
@@ -15,11 +16,12 @@ import Layout from "../components/Layout";
 export default function AppRouter() {
   return (
     <Routes>
-      {/* Public auth routes */}
+      {/* PUBLIC PAGES */}
+      <Route path="/" element={<WelcomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
-      {/* Protected navigation area wrapped in Layout */}
+      {/* PROTECTED ROUTES */}
       <Route
         element={
           <ProtectedRoute>
@@ -27,17 +29,15 @@ export default function AppRouter() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<DashboardPage />} />
+        <Route path="dashboard" element={<DashboardPage />} />
         <Route path="accounts" element={<AccountsPage />} />
         <Route path="transactions" element={<TransactionsPage />} />
         <Route path="budgets" element={<BudgetsPage />} />
-        <Route path="/budgets/new" element={<CreateBudgetPage />} />
+        <Route path="budgets/new" element={<CreateBudgetPage />} />
       </Route>
 
-      {/* Redirect old paths */}
-      <Route path="/dashboard" element={<Navigate to="/" replace />} />
+      <Route path="/home" element={<Navigate to="/dashboard" replace />} />
 
-      {/* Catch-all redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

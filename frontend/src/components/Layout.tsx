@@ -1,7 +1,7 @@
 import { Link, useNavigate, Outlet, useLocation } from "react-router-dom";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", path: "/" },
+  { label: "Dashboard", path: "dashboard" },
   { label: "Accounts", path: "/accounts" },
   { label: "Transactions", path: "/transactions" },
   { label: "Budgets", path: "/budgets" },
@@ -13,7 +13,7 @@ export default function Layout() {
 
   function logout() {
     localStorage.removeItem("user");
-    nav("/login");
+    nav("/");
   }
 
   return (

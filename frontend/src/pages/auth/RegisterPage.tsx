@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 export default function RegisterPage() {
   const nav = useNavigate();
   const [username, setUser] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPass] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -16,8 +17,9 @@ export default function RegisterPage() {
       await apiFetch("/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, email }),
       });
+      localStorage.removeItem("token");
 
       alert("Registration successfil");
       nav("/login");
@@ -47,9 +49,8 @@ export default function RegisterPage() {
       <div
         style={{
           width: "100%",
-          maxWidth: 400,
+          maxWidth: 500,
           padding: "48px 36px",
-          borderRadius: 20,
           background: "white",
           boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
           border: "1px solid #ececec",
@@ -75,14 +76,32 @@ export default function RegisterPage() {
         <form onSubmit={handleRegister}>
           {/* Email Input */}
           <input
-            placeholder="Email address"
+            placeholder="Choose username"
             value={username}
             onChange={(e) => setUser(e.target.value)}
             required
             style={{
               width: "100%",
               padding: "14px 16px",
-              borderRadius: 12,
+              border: "1px solid #d1d5db",
+              marginBottom: 14,
+              fontSize: 15,
+              outline: "none",
+              transition: "0.2s",
+            }}
+            onFocus={(e) =>
+              (e.target.style.borderColor = "rgba(34,197,94,0.7)")
+            }
+            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+          />
+          <input
+            placeholder="Email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{
+              width: "100%",
+              padding: "14px 16px",
               border: "1px solid #d1d5db",
               marginBottom: 14,
               fontSize: 15,
@@ -97,7 +116,7 @@ export default function RegisterPage() {
 
           {/* Password Input */}
           <input
-            placeholder="Password"
+            placeholder="Create password (min 6 characters)"
             type="password"
             value={password}
             onChange={(e) => setPass(e.target.value)}
@@ -105,7 +124,6 @@ export default function RegisterPage() {
             style={{
               width: "100%",
               padding: "14px 16px",
-              borderRadius: 12,
               border: "1px solid #d1d5db",
               marginBottom: 22,
               fontSize: 15,
@@ -125,7 +143,6 @@ export default function RegisterPage() {
             style={{
               width: "100%",
               padding: "14px",
-              borderRadius: 12,
               background: "linear-gradient(135deg, #22c55e, #16a34a)",
               color: "white",
               fontSize: 16,
@@ -175,6 +192,20 @@ export default function RegisterPage() {
           Login
         </span>
       </p>
+      <button
+        onClick={() => nav("/")}
+        style={{
+          background: "transparent",
+          marginTop: "20px",
+          border: "none",
+          color: "black",
+          fontSize: 18,
+          cursor: "pointer",
+          fontWeight: 500,
+        }}
+      >
+        ← Back to Home
+      </button>
     </div>
   );
 }

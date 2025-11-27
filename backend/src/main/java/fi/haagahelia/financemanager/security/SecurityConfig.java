@@ -28,16 +28,20 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        return username -> userRepository.findByUsername(username)
+        public UserDetailsService userDetailsService() {
+        return identifier -> userRepository
+                .findByUsernameOrEmail(identifier, identifier)
                 .map(user -> org.springframework.security.core.userdetails.User
-                        .withUsername(user.getUsername())
+                        .withUsername(user.getUsername()) 
                         .password(user.getPassword())
                         .roles(user.getRole().replace("ROLE_", ""))
-                        .build())
+                        .build()
+                )
                 .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found: " + username));
-    }
+                        new UsernameNotFoundException("User not found: " + identifier));
+        }
+
+
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider(

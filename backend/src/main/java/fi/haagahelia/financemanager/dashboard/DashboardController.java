@@ -27,6 +27,8 @@ public class DashboardController {
         User user = userRepository.findByUsername(username)
                 .orElseThrow();
 
+        System.out.println("username attribute = " + username);
+
         // Load all accounts for the user
         var accounts = accountRepository.findByUser(user);
 
@@ -81,5 +83,6 @@ public class DashboardController {
                 ),
                 "recentTransactions", recent
         );
+
     }
 }

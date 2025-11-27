@@ -22,11 +22,9 @@ export default function LoginPage() {
         body: JSON.stringify({ username, password }),
       });
 
-      // SAVE JWT
       localStorage.setItem("token", token);
 
-      // Redirect to dashboard or home
-      nav("/");
+      nav("/dashboard");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Unknown login error";
@@ -52,9 +50,8 @@ export default function LoginPage() {
       <div
         style={{
           width: "100%",
-          maxWidth: 400,
+          maxWidth: 500,
           padding: "48px 36px",
-          borderRadius: 20,
           background: "white",
           boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
           border: "1px solid #ececec",
@@ -79,14 +76,13 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin}>
           <input
-            placeholder="Email address"
+            placeholder="Username or email address"
             value={username}
             onChange={(e) => setUser(e.target.value)}
             required
             style={{
               width: "100%",
               padding: "14px 16px",
-              borderRadius: 12,
               border: "1px solid #d1d5db",
               marginBottom: 14,
               fontSize: 15,
@@ -103,7 +99,6 @@ export default function LoginPage() {
             style={{
               width: "100%",
               padding: "14px 16px",
-              borderRadius: 12,
               border: "1px solid #d1d5db",
               marginBottom: 22,
               fontSize: 15,
@@ -117,7 +112,6 @@ export default function LoginPage() {
             style={{
               width: "100%",
               padding: "14px",
-              borderRadius: 12,
               background: "linear-gradient(135deg, #22c55e, #16a34a)",
               color: "white",
               fontSize: 16,
@@ -152,6 +146,20 @@ export default function LoginPage() {
           Sign up
         </span>
       </p>
+      <button
+        onClick={() => nav("/")}
+        style={{
+          background: "transparent",
+          marginTop: "20px",
+          border: "none",
+          color: "black",
+          fontSize: 18,
+          cursor: "pointer",
+          fontWeight: 500,
+        }}
+      >
+        ← Back to Home
+      </button>
     </div>
   );
 }

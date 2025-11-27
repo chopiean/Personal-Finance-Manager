@@ -21,28 +21,23 @@ public class AuthController {
     private final JwtService jwtService;
     private final UserService userService;
 
-    // ------------------------------
-    // LOGIN
-    // ------------------------------
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+    public AuthResponse login(@RequestBody LoginRequest req) {
 
+        // login using username OR email
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()
+                        req.getUsername(),
+                        req.getPassword()
                 )
         );
 
         UserDetails user = (UserDetails) auth.getPrincipal();
         String token = jwtService.generateToken(user);
 
-        return ResponseEntity.ok(new AuthResponse(token));
+        return new AuthResponse(token);
     }
 
-    // ------------------------------
-    // REGISTER
-    // ------------------------------
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserRegisterRequest request) {
         return ResponseEntity.ok(userService.register(request));

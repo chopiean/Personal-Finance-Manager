@@ -25,11 +25,16 @@ public class UserService {
     public UserResponse register(UserRegisterRequest request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("This username is already taken.");
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("This email is already registered.");
         }
 
         User user = new User();
         user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail()); // 👈 NEW
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole("ROLE_USER");
 
@@ -52,6 +57,7 @@ public class UserService {
         return new UserResponse(
                 user.getId(),
                 user.getUsername(),
+                user.getEmail(),   
                 user.getRole()
         );
     }

@@ -1,27 +1,25 @@
-import "./App.css";
-import { BrowserRouter, useLocation } from "react-router-dom";
-import AppRouter from "./router/AppRouter";
-import Navbar from "./components/Navbar";
-
-function AppContent() {
-  const location = useLocation();
-  const hideNavbar =
-    location.pathname === "/login" || location.pathname === "/register";
-
-  return (
-    <div className="app-shell">
-      {!hideNavbar && <Navbar />}
-      <main className="app-main">
-        <AppRouter />
-      </main>
-    </div>
-  );
-}
+import { Routes, Route } from "react-router-dom";
+import WelcomePage from "./pages/auth/WelcomePage";
+import LoginPage from "./pages/auth/LoginPage";
+import RegisterPage from "./pages/auth/RegisterPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Dashboard from "./pages/dashboard/DashboardPage";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<WelcomePage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }

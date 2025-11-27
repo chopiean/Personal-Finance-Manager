@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { label: "Accounts", path: "/accounts" },
   { label: "Transactions", path: "/transactions" },
   { label: "Budgets", path: "/budgets" },
+  { label: "Import / Export", path: "/csv-upload" },
 ];
 
 export default function Layout() {

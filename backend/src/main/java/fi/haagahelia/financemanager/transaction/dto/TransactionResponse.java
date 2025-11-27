@@ -5,10 +5,6 @@ import lombok.*;
 
 import java.time.LocalDate;
 
-/**
- * Outgoing payload sent back to the client
- * when reading Transactions.
- */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,7 +16,7 @@ public class TransactionResponse {
 
     private String description;
 
-    private double amount;
+    private Double amount;
 
     private LocalDate date;
 
@@ -29,4 +25,6 @@ public class TransactionResponse {
     private Long accountId;
 
     private String accountName;
+
+    private String category;
 }

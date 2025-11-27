@@ -13,6 +13,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     /** All transactions for a specific account. */
     List<Transaction> findByAccountId(Long accountId);
 
+    /** All transactions ordered by date descending for a specific account. */
+    List<Transaction> findByAccountIdOrderByDateDesc(Long accountId);
+
     /** All transactions between two dates (inclusive). */
     List<Transaction> findByDateBetween(LocalDate start, LocalDate end);
 
@@ -23,16 +26,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             LocalDate end
     );
 
-    /** All transactions for a user's account. */
+    /** All transactions for a user's account(s) using userId. */
     List<Transaction> findByAccountUserId(Long userId);
 
-    /** Last 5 most recent transactions(dashboard). */
+    /** Last 5 most recent transactions (dashboard). */
     List<Transaction> findTop5ByAccountUserIdOrderByDateDesc(Long userId);
 
-    /** Transactions for a user within a date range */
+    /** Transactions for a user within a date range. */
     List<Transaction> findByAccountUserIdAndDateBetween(
             Long userId,
             LocalDate start,
             LocalDate end
     );
+
+    /** Required for CSV Export — fetch ALL transactions for username */
+    List<Transaction> findByUserUsername(String username);
+
 }

@@ -22,41 +22,47 @@ public class CsvImportService {
 
     /**
      * Reads CSV file and imports all rows as transactions.
+     * CSV format (no accountId column):
+     * date,description,amount,type
      */
-    public int importCsv(MultipartFile file) {
+    public int importCsv(MultipartFile file, Long accountId) {
         int count = 0;
-
+    
         try (var reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-
+    
             reader.readLine(); // Skip header
             String line;
-
+    
             while ((line = reader.readLine()) != null) {
+    
                 String[] parts = line.split(",");
-
-                LocalDate date = LocalDate.parse(parts[0]);
-                String description = parts[1];
-                Double amount = Double.parseDouble(parts[2]);
-                TransactionType type = TransactionType.valueOf(parts[3]);
-                Long accountId = Long.parseLong(parts[4]);
-
+    
+                if (parts.length < 4) {
+                    throw new RuntimeException("Invalid CSV format: " + line);
+                }
+    
+                LocalDate date = LocalDate.parse(parts[0].trim());
+                String description = parts[1].trim();
+                Double amount = Double.parseDouble(parts[2].trim());
+                TransactionType type = TransactionType.valueOf(parts[3].trim().toUpperCase());
+    
                 TransactionRequest req = TransactionRequest.builder()
                         .description(description)
                         .amount(amount)
                         .date(date)
                         .type(type)
-                        .accountId(accountId)
+                        .accountId(accountId)   
                         .build();
-
-                // 🔥 NEW: For CSV, use the CSV-specific method
+    
                 transactionService.createTransactionFromCsv(req);
                 count++;
             }
-
+    
         } catch (Exception e) {
             throw new RuntimeException("Failed to import CSV: " + e.getMessage());
         }
-
+    
         return count;
     }
+    
 }

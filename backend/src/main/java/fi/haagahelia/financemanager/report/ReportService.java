@@ -10,6 +10,7 @@ import fi.haagahelia.financemanager.transaction.TransactionRepository;
 import fi.haagahelia.financemanager.transaction.TransactionType;
 import fi.haagahelia.financemanager.user.User;
 import fi.haagahelia.financemanager.user.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +43,9 @@ public class ReportService {
         LocalDate start = ym.atDay(1);
         LocalDate end = ym.atEndOfMonth();
 
-        // --- 1. LOAD USER TRANSACTIONS ---
+        // -----------------------------------------------------
+        // 1) LOAD TRANSACTIONS FOR USER (OR SPECIFIC ACCOUNT)
+        // -----------------------------------------------------
         List<Transaction> txs;
         if (accountId == null) {
             txs = transactionRepository.findByAccountUserIdAndDateBetween(
@@ -54,7 +57,9 @@ public class ReportService {
             );
         }
 
-        // --- 2. SUMMARIZE TOTALS ---
+        // -----------------------------------------------------
+        // 2) TOTAL INCOME + TOTAL EXPENSE
+        // -----------------------------------------------------
         double income = txs.stream()
                 .filter(t -> t.getType() == TransactionType.INCOME)
                 .mapToDouble(Transaction::getAmount)
@@ -67,11 +72,13 @@ public class ReportService {
 
         double net = income - expense;
 
-        // --- 3. CATEGORY SUMMARY ---
+        // -----------------------------------------------------
+        // 3) CATEGORY SUMMARY (use t.getCategory)
+        // -----------------------------------------------------
         Map<String, CategorySummary> categories = new HashMap<>();
 
         for (Transaction t : txs) {
-            String category = Optional.ofNullable(t.getDescription())
+            String category = Optional.ofNullable(t.getCategory())
                     .filter(s -> !s.isBlank())
                     .orElse("Uncategorized");
 
@@ -99,31 +106,34 @@ public class ReportService {
                 .sorted(Comparator.comparing(CategorySummary::getCategory))
                 .toList();
 
-        // --- 4. LOAD USER BUDGETS ONLY ---
-        // 4) Budget comparison
+        // -----------------------------------------------------
+        // 4) LOAD BUDGETS FOR USER OR ACCOUNT
+        // -----------------------------------------------------
         List<Budget> budgets;
 
-                if (accountId != null) {
-                // Load budgets for a specific account
-                budgets = budgetRepository.findByAccountIdAndYearAndMonth(accountId, year, month);
-                } else {
-                // Load all budgets for the logged-in user
-                budgets = budgetRepository.findByAccountUserIdAndYearAndMonth(
-                        user.getId(), year, month
-                );
+        if (accountId != null) {
+            budgets = budgetRepository.findByAccountIdAndYearAndMonth(accountId, year, month);
+        } else {
+            budgets = budgetRepository.findByAccountUserIdAndYearAndMonth(
+                    user.getId(), year, month
+            );
         }
 
-        // group expenses by category
+        // -----------------------------------------------------
+        // 5) EXPENSE BY CATEGORY FOR BUDGET COMPARISON
+        // -----------------------------------------------------
         Map<String, Double> expenseByCategory = txs.stream()
                 .filter(t -> t.getType() == TransactionType.EXPENSE)
                 .collect(Collectors.groupingBy(
-                        t -> Optional.ofNullable(t.getDescription())
+                        t -> Optional.ofNullable(t.getCategory())
                                 .filter(s -> !s.isBlank())
                                 .orElse("Uncategorized"),
                         Collectors.summingDouble(Transaction::getAmount)
                 ));
 
-        // build budget statuses
+        // -----------------------------------------------------
+        // 6) BUILD BUDGET STATUSES
+        // -----------------------------------------------------
         List<BudgetStatus> budgetStatuses = budgets.stream()
                 .map(b -> {
                     String cat = Optional.ofNullable(b.getCategory())
@@ -131,7 +141,7 @@ public class ReportService {
                             .orElse("Uncategorized");
 
                     double actual = expenseByCategory.getOrDefault(cat, 0.0);
-                    double limit = b.getLimitAmount() == null ? 0.0 : b.getLimitAmount();
+                    double limit = Optional.ofNullable(b.getLimitAmount()).orElse(0.0);
                     double diff = limit - actual;
 
                     return BudgetStatus.builder()
@@ -145,7 +155,9 @@ public class ReportService {
                 .sorted(Comparator.comparing(BudgetStatus::getCategory))
                 .toList();
 
-        // --- 5. FINAL RESPONSE ---
+        // -----------------------------------------------------
+        // 7) FINAL RESPONSE
+        // -----------------------------------------------------
         return MonthlySummaryResponse.builder()
                 .year(year)
                 .month(month)

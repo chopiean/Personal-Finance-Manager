@@ -64,27 +64,23 @@ export default function DashboardPage() {
           marginBottom: 40,
         }}
       >
-        {/* Total Balance */}
         <DashboardCard
           title="Total Balance"
           value={`€${summary?.totalBalance.toFixed(2) ?? "0.00"}`}
         />
 
-        {/* Income */}
         <DashboardCard
           title="Income (This Month)"
           value={`+€${summary?.income.toFixed(2) ?? "0.00"}`}
           color="#16a34a"
         />
 
-        {/* Expenses */}
         <DashboardCard
           title="Expenses (This Month)"
           value={`-€${summary?.expenses.toFixed(2) ?? "0.00"}`}
           color="#dc2626"
         />
 
-        {/* Savings */}
         <DashboardCard
           title="Savings Rate"
           value={`${summary?.savingsRate ?? 0}%`}
@@ -126,7 +122,6 @@ export default function DashboardPage() {
               justifyContent: "space-between",
             }}
           >
-            {/* Left side */}
             <div>
               <strong>{t.description}</strong>
               <p style={{ color: "#6b7280", marginTop: 4, fontSize: 14 }}>
@@ -134,7 +129,6 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            {/* Right side: amount */}
             <div
               style={{
                 fontWeight: 600,
@@ -150,7 +144,7 @@ export default function DashboardPage() {
   );
 }
 
-/* ----- Reusable Dashboard Card Component ----- */
+/* ----- Small Card Component ----- */
 function DashboardCard({
   title,
   value,

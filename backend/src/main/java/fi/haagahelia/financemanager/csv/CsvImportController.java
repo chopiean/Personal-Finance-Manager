@@ -1,6 +1,7 @@
 package fi.haagahelia.financemanager.csv;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,8 +19,11 @@ public class CsvImportController {
      * Upload & import CSV file.
      */
     @PostMapping("/import")
-    public String importCsv(@RequestParam("file") MultipartFile file) {
-        int imported = csvImportService.importCsv(file);
-        return "Imported " + imported + " transactions.";
+    public ResponseEntity<?> uploadCsv(
+        @RequestParam("file") MultipartFile file,
+        @RequestParam("accountId") Long accountId
+    ) {
+        int count = csvImportService.importCsv(file, accountId);
+        return ResponseEntity.ok(count + " transactions imported");
     }
 }

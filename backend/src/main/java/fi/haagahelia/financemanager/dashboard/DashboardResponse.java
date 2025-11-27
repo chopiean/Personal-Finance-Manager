@@ -1,22 +1,32 @@
 package fi.haagahelia.financemanager.dashboard;
 
+import fi.haagahelia.financemanager.transaction.TransactionType;
 import java.util.List;
 
 public class DashboardResponse {
 
-    public Summary summary;
-    public List<RecentTransactionItem> recentTransactions;
+    private Summary summary;
+    private List<RecentTransactionItem> recentTransactions;
 
     public DashboardResponse(Summary summary, List<RecentTransactionItem> recentTransactions) {
         this.summary = summary;
         this.recentTransactions = recentTransactions;
     }
 
+    public Summary getSummary() {
+        return summary;
+    }
+
+    public List<RecentTransactionItem> getRecentTransactions() {
+        return recentTransactions;
+    }
+
+    // ----- SUMMARY -----
     public static class Summary {
-        public double totalBalance;
-        public double income;
-        public double expenses;
-        public double savingsRate;
+        private double totalBalance;
+        private double income;
+        private double expenses;
+        private double savingsRate;
 
         public Summary(double totalBalance, double income, double expenses, double savingsRate) {
             this.totalBalance = totalBalance;
@@ -24,19 +34,39 @@ public class DashboardResponse {
             this.expenses = expenses;
             this.savingsRate = savingsRate;
         }
+
+        public double getTotalBalance() { return totalBalance; }
+        public double getIncome() { return income; }
+        public double getExpenses() { return expenses; }
+        public double getSavingsRate() { return savingsRate; }
     }
 
+    // ----- RECENT TRANSACTION -----
     public static class RecentTransactionItem {
-        public Long id;
-        public String category;
-        public double amount;
-        public String date;
+        private Long id;
+        private String description;
+        private double amount;
+        private String date;
+        private TransactionType type;   
 
-        public RecentTransactionItem(Long id, String category, double amount, String date){
+        public RecentTransactionItem(
+                Long id,
+                String description,
+                double amount,
+                String date,
+                TransactionType type
+        ) {
             this.id = id;
-            this.category = category;
+            this.description = description;
             this.amount = amount;
             this.date = date;
+            this.type = type;
         }
+
+        public Long getId() { return id; }
+        public String getDescription() { return description; }
+        public double getAmount() { return amount; }
+        public String getDate() { return date; }
+        public TransactionType getType() { return type; }
     }
- }
+}

@@ -8,6 +8,8 @@ import fi.haagahelia.financemanager.transaction.TransactionType;
 import fi.haagahelia.financemanager.user.User;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -30,13 +32,23 @@ public class DashboardService {
 
         User user = currentUserService.getCurrentUser();
 
+        // TOTAL BALANCE (all accounts)
         double totalBalance = accountRepository.findByUserId(user.getId())
                 .stream()
                 .mapToDouble(a -> a.getInitialBalance().doubleValue())
                 .sum();
 
-        List<Transaction> allUserTx = transactionRepository.findByAccountUserId(user.getId());
+        // --- FIX: CURRENT MONTH ONLY ---
+        YearMonth currentMonth = YearMonth.now(); // Example: 2025-01
+        LocalDate start = currentMonth.atDay(1);
+        LocalDate end = currentMonth.atEndOfMonth();
 
+        List<Transaction> allUserTx =
+                transactionRepository.findByAccountUserIdAndDateBetween(
+                        user.getId(), start, end
+                );
+
+        // SUM INCOME & EXPENSE FOR THIS MONTH
         double income = allUserTx.stream()
                 .filter(t -> t.getType() == TransactionType.INCOME)
                 .mapToDouble(Transaction::getAmount)
@@ -50,6 +62,7 @@ public class DashboardService {
         double savingsRate =
                 (income == 0) ? 0 : ((income - expenses) / income) * 100;
 
+        // RECENT TRANSACTIONS (TOP 5 ONLY)
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         List<DashboardResponse.RecentTransactionItem> recent =
@@ -59,7 +72,8 @@ public class DashboardService {
                                 t.getId(),
                                 t.getDescription(),
                                 t.getAmount(),
-                                t.getDate().format(fmt)
+                                t.getDate().format(fmt),
+                                t.getType()
                         ))
                         .toList();
 

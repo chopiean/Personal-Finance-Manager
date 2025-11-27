@@ -5,6 +5,25 @@ import { useNavigate } from "react-router-dom";
 
 import type { AccountResponse } from "../../api/type";
 
+// 🔥 Predefined categories used across the app & CSV import
+const CATEGORY_OPTIONS = [
+  "Shopping",
+  "Groceries",
+  "Transport",
+  "Bills",
+  "Restaurants",
+  "Entertainment",
+  "Health",
+  "Travel",
+  "Subscriptions",
+  "Gifts",
+  "Education",
+  "Salary",
+  "Side Income",
+  "Savings",
+  "Uncategorized",
+];
+
 export default function CreateBudgetPage() {
   const nav = useNavigate();
   const [accounts, setAccounts] = useState<AccountResponse[]>([]);
@@ -70,8 +89,9 @@ export default function CreateBudgetPage() {
       >
         Create Budget
       </h1>
+
       <p style={{ color: "#6b7280", marginBottom: 28, fontSize: 16 }}>
-        Set a spending limit for a category this month.
+        Set a monthly spending limit for a category.
       </p>
 
       {/* Main Card */}
@@ -92,16 +112,38 @@ export default function CreateBudgetPage() {
             gap: 20,
           }}
         >
-          {/* Category */}
+          {/* Category Dropdown + Custom Input */}
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label className="field-label">Category</label>
+
+            <select
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "1px solid #d1d5db",
+                fontSize: 15,
+              }}
+            >
+              <option value="">Select category…</option>
+              {CATEGORY_OPTIONS.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+
+            {/* Optional custom text */}
             <input
               className="input"
               name="category"
               value={form.category}
               onChange={handleChange}
-              placeholder="Groceries, Transport, Shopping…"
+              placeholder="Or enter custom category…"
               style={{
+                marginTop: 6,
                 padding: "12px 14px",
                 borderRadius: 12,
                 border: "1px solid #d1d5db",

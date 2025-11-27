@@ -9,6 +9,7 @@ import AccountsPage from "../pages/accounts/AccountsPage";
 import TransactionsPage from "../pages/transactions/TransactionsPage";
 import BudgetsPage from "../pages/budgets/BudgetsPage";
 import CreateBudgetPage from "../pages/budgets/CreateBudgetPage";
+import CsvUploadPage from "../pages/csv/CsvUploadPage";
 
 import ProtectedRoute from "../components/ProtectedRoute";
 import Layout from "../components/Layout";
@@ -34,6 +35,7 @@ export default function AppRouter() {
         <Route path="transactions" element={<TransactionsPage />} />
         <Route path="budgets" element={<BudgetsPage />} />
         <Route path="budgets/new" element={<CreateBudgetPage />} />
+        <Route path="/csv-upload" element={<CsvUploadPage />} />
       </Route>
 
       <Route path="/home" element={<Navigate to="/dashboard" replace />} />

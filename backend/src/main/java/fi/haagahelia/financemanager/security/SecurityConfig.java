@@ -90,12 +90,17 @@ public class SecurityConfig {
         );
 
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login",
-                                "/api/auth/register",
-                                "/h2-console/**")
-                .permitAll()
+                .requestMatchers(
+                        "/api/auth/login",
+                        "/api/auth/register",
+                        "/h2-console/**"
+                ).permitAll()
+
+                .requestMatchers("/api/csv/**").authenticated()
+
                 .anyRequest().authenticated()
         );
+
 
         http.addFilterBefore(jwtAuthFilter,
                 org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);

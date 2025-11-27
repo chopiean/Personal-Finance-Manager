@@ -1,4 +1,7 @@
-const API_BASE = "http://localhost:8080/api";
+const API_BASE =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:8080/api"
+    : "https://personal-finance-manager-production-a787.up.railway.app/api";
 
 export async function apiFetch<T>(
   path: string,
@@ -25,7 +28,6 @@ export async function apiFetch<T>(
     throw new Error(text || res.statusText);
   }
 
-  // If nothing returned (204)
   if (res.status === 204) return null as T;
 
   return (await res.json()) as T;

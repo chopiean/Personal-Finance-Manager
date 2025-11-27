@@ -4,16 +4,25 @@ import fi.haagahelia.financemanager.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -22,34 +31,36 @@ public class SecurityConfig {
 
     private final UserRepository userRepository;
 
+    // -------------------------------
+    // BEANS
+    // -------------------------------
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-        public UserDetailsService userDetailsService() {
-        return identifier -> userRepository
-                .findByUsernameOrEmail(identifier, identifier)
-                .map(user -> org.springframework.security.core.userdetails.User
-                        .withUsername(user.getUsername()) 
-                        .password(user.getPassword())
-                        .roles(user.getRole().replace("ROLE_", ""))
-                        .build()
-                )
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found: " + identifier));
-        }
-
-
+    public UserDetailsService userDetailsService() {
+        return identifier ->
+                userRepository.findByUsernameOrEmail(identifier, identifier)
+                        .map(user -> org.springframework.security.core.userdetails.User
+                                .withUsername(user.getUsername())
+                                .password(user.getPassword())
+                                .roles(user.getRole().replace("ROLE_", ""))
+                                .build()
+                        )
+                        .orElseThrow(() ->
+                                new UsernameNotFoundException("User not found: " + identifier));
+    }
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider(
-            UserDetailsService userDetailsService,
+            UserDetailsService uds,
             PasswordEncoder encoder
     ) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
+        provider.setUserDetailsService(uds);
         provider.setPasswordEncoder(encoder);
         return provider;
     }
@@ -60,52 +71,60 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    // -------------------------------
+    // SECURITY FILTER CHAIN
+    // -------------------------------
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                        DaoAuthenticationProvider provider,
-                                        JwtAuthenticationFilter jwtAuthFilter) throws Exception {
+                                           DaoAuthenticationProvider provider,
+                                           JwtAuthenticationFilter jwtFilter) throws Exception {
 
-        http.csrf(csrf -> csrf.disable());
+        http.csrf(csrf -> csrf.disable())
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+                .authenticationProvider(provider)
+                .securityContext(sc -> sc.requireExplicitSave(false))
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(cors -> cors.configurationSource(req -> configureCors()));
 
-        http.authenticationProvider(provider);
-
-        http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
-
-        http.securityContext(sc -> sc.requireExplicitSave(false));
-
-        http.cors(cors -> cors.configurationSource(req -> {
-            var c = new org.springframework.web.cors.CorsConfiguration();
-            c.setAllowCredentials(true);
-            c.addAllowedOrigin("http://localhost:5173");
-            c.addAllowedMethod("*");
-            c.addAllowedHeader("*");
-            c.addExposedHeader("Authorization");
-            return c;
-        }));
-
-        http.sessionManagement(s -> s
-                .sessionCreationPolicy(
-                        org.springframework.security.config.http.SessionCreationPolicy.STATELESS
-                )
-        );
-
+        // -----------------------------
+        // AUTHORIZATION RULES
+        // -----------------------------
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                         "/api/auth/login",
                         "/api/auth/register",
                         "/h2-console/**"
                 ).permitAll()
-
-                .requestMatchers("/api/csv/**").authenticated()
-
                 .anyRequest().authenticated()
         );
 
-
-        http.addFilterBefore(jwtAuthFilter,
-                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+        // Add JWT filter BEFORE username/password filter
+        http.addFilterBefore(jwtFilter,
+                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class
+        );
 
         return http.build();
     }
 
+    // -------------------------------
+    // CORS CONFIG
+    // -------------------------------
+
+    private CorsConfiguration configureCors() {
+        CorsConfiguration cors = new CorsConfiguration();
+        cors.setAllowCredentials(true);
+
+        cors.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "https://personal-finance-manager-sigma-seven.vercel.app",
+                "https://personal-finance-manager-production-a787.up.railway.app"
+        ));
+
+        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        cors.setAllowedHeaders(List.of("*"));
+        cors.setExposedHeaders(List.of("Authorization"));
+
+        return cors;
+    }
 }

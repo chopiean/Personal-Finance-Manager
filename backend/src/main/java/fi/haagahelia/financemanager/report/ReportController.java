@@ -2,6 +2,7 @@ package fi.haagahelia.financemanager.report;
 
 import fi.haagahelia.financemanager.report.dto.MonthlySummaryResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,8 +17,9 @@ public class ReportController {
             @RequestParam int year,
             @RequestParam int month,
             @RequestParam(required = false) Long accountId,
-            @RequestAttribute("username") String username
+            Authentication auth
     ) {
+        String username = auth.getName();
         return reportService.getMonthlySummary(year, month, accountId, username);
     }
 }

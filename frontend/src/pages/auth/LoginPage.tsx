@@ -19,7 +19,7 @@ export default function LoginPage() {
     try {
       const { token } = await apiFetch<AuthResponse>("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ identifier: username, password }),
       });
 
       localStorage.setItem("token", token);

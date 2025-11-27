@@ -31,10 +31,10 @@ public class JwtService {
 
     public <T> T extractClaim(String token, Function<Claims, T> resolver) {
 
-        Claims claims = Jwts.parserBuilder()             // ✔ works on old jjwt
-                .setSigningKey(getSignInKey())           // ✔ correct API
+        Claims claims = Jwts.parserBuilder()            
+                .setSigningKey(getSignInKey())           
                 .build()
-                .parseClaimsJws(token)                   // ✔ correct API
+                .parseClaimsJws(token)                   
                 .getBody();
 
         return resolver.apply(claims);
@@ -46,13 +46,13 @@ public class JwtService {
 
     public String generateToken(UserDetails userDetails) {
         long now = System.currentTimeMillis();
-        long expiration = now + (1000 * 60 * 60 * 24); // 24 hours
+        long expiration = now + (1000 * 60 * 60 * 24); 
 
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())        // ✔ old API
-                .setIssuedAt(new Date(now))                   // ✔ old API
-                .setExpiration(new Date(expiration))          // ✔ old API
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256) // ✔ old API
+                .setSubject(userDetails.getUsername())        
+                .setIssuedAt(new Date(now))                   
+                .setExpiration(new Date(expiration))         
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256) 
                 .compact();
     }
 

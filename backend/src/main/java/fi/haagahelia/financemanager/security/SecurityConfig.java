@@ -22,6 +22,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 
+import org.springframework.http.HttpMethod;
+
 import java.util.List;
 
 @Configuration
@@ -85,17 +87,20 @@ public class SecurityConfig {
                 .authenticationProvider(provider)
                 .securityContext(sc -> sc.requireExplicitSave(false))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // Enable CORS using our custom configuration
                 .cors(cors -> cors.configurationSource(req -> configureCors()));
 
-        // -----------------------------
-        // AUTHORIZATION RULES
-        // -----------------------------
         http.authorizeHttpRequests(auth -> auth
+                // IMPORTANT: allow preflight CORS requests
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                 .requestMatchers(
                         "/api/auth/login",
                         "/api/auth/register",
                         "/h2-console/**"
                 ).permitAll()
+
                 .anyRequest().authenticated()
         );
 
@@ -108,17 +113,18 @@ public class SecurityConfig {
     }
 
     // -------------------------------
-    // CORS CONFIG
+    // CORS CONFIG (FULLY FIXED)
     // -------------------------------
 
     private CorsConfiguration configureCors() {
         CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowCredentials(true);
 
-        cors.setAllowedOrigins(List.of(
+        // Use PATTERNS instead of direct origins (fixes Vercel CORS)
+        cors.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
-                "https://personal-finance-manager-teal.vercel.app",
-                "https://personal-finance-manager-production-a787.up.railway.app"
+                "https://*.vercel.app",
+                "https://personal-finance-manager-teal.vercel.app"
         ));
 
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

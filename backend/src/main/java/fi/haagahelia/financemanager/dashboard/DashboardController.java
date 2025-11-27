@@ -7,6 +7,7 @@ import fi.haagahelia.financemanager.account.AccountRepository;
 import fi.haagahelia.financemanager.user.User;
 import fi.haagahelia.financemanager.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -22,17 +23,19 @@ public class DashboardController {
     private final TransactionRepository transactionRepository;
 
     @GetMapping
-    public Map<String, Object> dashboard(@RequestAttribute("username") String username) {
+    public Map<String, Object> dashboard(Authentication auth) {
+
+        // ✔ Get logged-in username from JWT
+        String username = auth.getName();
+        System.out.println("Authenticated username = " + username);
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow();
-
-        System.out.println("username attribute = " + username);
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Load all accounts for the user
         var accounts = accountRepository.findByUser(user);
 
-        // Load all transactions for the user through account → user
+        // Load all transactions via account → user
         var transactions = transactionRepository.findByAccountUserId(user.getId());
 
         // ---- TOTAL BALANCE ----
@@ -64,9 +67,8 @@ public class DashboardController {
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 
-        double savingsRate = income > 0
-                ? ((income - expenses) / income) * 100
-                : 0;
+        double savingsRate =
+                income > 0 ? ((income - expenses) / income) * 100 : 0;
 
         // ---- RECENT 10 ----
         var recent = transactions.stream()
@@ -83,6 +85,5 @@ public class DashboardController {
                 ),
                 "recentTransactions", recent
         );
-
     }
 }

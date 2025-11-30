@@ -93,7 +93,7 @@ public class BudgetService {
             throw new SecurityException("Unauthorized account");
         }
 
-        budget.setCategory(req.getCategory());
+        budget.setCategory(req.getCategory().trim());
         budget.setLimitAmount(req.getLimitAmount());
         budget.setMonth(req.getMonth());
         budget.setYear(req.getYear());

@@ -2,6 +2,9 @@ package fi.haagahelia.financemanager.transaction;
 
 import fi.haagahelia.financemanager.account.Account;
 import fi.haagahelia.financemanager.account.AccountRepository;
+import fi.haagahelia.financemanager.budget.Budget;
+import fi.haagahelia.financemanager.budget.BudgetRepository;
+import fi.haagahelia.financemanager.report.dto.BudgetStatus;
 import fi.haagahelia.financemanager.report.dto.MonthlySummaryResponse;
 import fi.haagahelia.financemanager.transaction.dto.TransactionRequest;
 import fi.haagahelia.financemanager.transaction.dto.TransactionResponse;
@@ -24,6 +27,7 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final BudgetRepository budgetRepository;
 
     private String normalizeCategory(String raw) {
         if (raw == null || raw.isBlank()) return "Uncategorized";
@@ -46,7 +50,12 @@ public class TransactionService {
             throw new SecurityException("Account does not belong to user");
         }
 
-        String category = normalizeCategory(req.getCategory());
+        String category = normalizeCategory(
+                req.getCategory() == null || req.getCategory().isBlank()
+                        ? req.getDescription()
+                        : req.getCategory()
+        );
+        
 
         Transaction tx = Transaction.builder()
                 .description(req.getDescription())
@@ -71,7 +80,12 @@ public class TransactionService {
                 .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
         User user = account.getUser();
-        String category = normalizeCategory(req.getCategory());
+        String category = normalizeCategory(
+        req.getCategory() == null || req.getCategory().isBlank()
+                ? req.getDescription()
+                : req.getCategory()
+);
+
 
         Transaction tx = Transaction.builder()
                 .description(req.getDescription())
@@ -156,7 +170,7 @@ public class TransactionService {
     // SIMPLE Monthly Summary (Dashboard)
     // ---------------------------------------------------------
     @Transactional(readOnly = true)
-    public MonthlySummaryResponse getMonthlySummary(String username, int year, int month) {
+        public MonthlySummaryResponse getMonthlySummary(String username, int year, int month) {
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -164,6 +178,34 @@ public class TransactionService {
         LocalDate start = LocalDate.of(year, month, 1);
         LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
 
+        // 1. Fetch budgets for user + month
+        List<Budget> budgets = budgetRepository
+                .findByAccountUserIdAndYearAndMonth(user.getId(), year, month);
+
+        // 2. Build BudgetStatus list
+        List<BudgetStatus> budgetStatuses = budgets.stream().map(budget -> {
+
+                // Calculate spent for category
+                double actualExpense = transactionRepository.sumExpensesByCategory(
+                        user.getId(),
+                        budget.getCategory(),
+                        start,
+                        end
+                );
+
+                double difference = budget.getLimitAmount() - actualExpense;
+
+                return BudgetStatus.builder()
+                        .category(budget.getCategory())
+                        .budgetLimit(budget.getLimitAmount())
+                        .actualExpense(actualExpense)
+                        .difference(difference)
+                        .overBudget(difference < 0)
+                        .build();
+
+        }).toList();
+
+        // 3. Compute full income / expense totals for month
         var txs = transactionRepository.findByAccountUserIdAndDateBetween(
                 user.getId(), start, end
         );
@@ -178,6 +220,7 @@ public class TransactionService {
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 
+        // 4. Return Monthly Summary
         return MonthlySummaryResponse.builder()
                 .year(year)
                 .month(month)
@@ -186,7 +229,8 @@ public class TransactionService {
                 .totalExpense(expense)
                 .netBalance(income - expense)
                 .categories(Collections.emptyList())
-                .budgetStatuses(Collections.emptyList())
+                .budgetStatuses(budgetStatuses)
                 .build();
-    }
+        }
+
 }

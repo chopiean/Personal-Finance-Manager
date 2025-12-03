@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../../api/api";
 
-const API_BASE = import.meta.env.VITE_API_URL;
+const API_BASE =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:8080/api"
+    : "https://personal-finance-manager-production-a787.up.railway.app/api";
 
 type Account = {
   id: number;
@@ -87,15 +90,14 @@ export default function CsvUploadPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:8080/api/csv/transactions", {
+      const res = await fetch(`${API_BASE}/csv/transactions`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (!res.ok) {
-        const text = await res.text();
-        console.error("Export failed:", text);
+        console.error(await res.text());
         return;
       }
 
@@ -129,7 +131,7 @@ export default function CsvUploadPage() {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:8080/api/csv/import?accountId=${selectedAccount}`,
+        `${API_BASE}/csv/import?accountId=${selectedAccount}`,
         {
           method: "POST",
           headers: {

@@ -9,26 +9,36 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const token = localStorage.getItem("token");
 
+  const isFormData = options.body instanceof FormData;
+
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
+
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(API_BASE + path, {
+  const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers,
   });
 
+  if (res.status === 204) return null as T;
+
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || res.statusText);
+    const msg = await res.text();
+    throw new Error(msg || res.statusText);
   }
 
-  if (res.status === 204) return null as T;
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    return (await res.blob()) as T;
+  }
 
   return (await res.json()) as T;
 }

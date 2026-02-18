@@ -2,29 +2,23 @@ package fi.haagahelia.financemanager.security;
 
 import fi.haagahelia.financemanager.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
-
-import org.springframework.http.HttpMethod;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
@@ -34,10 +28,6 @@ import java.util.List;
 public class SecurityConfig {
 
     private final UserRepository userRepository;
-
-    // -------------------------------
-    // BEANS
-    // -------------------------------
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -75,9 +65,26 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    // -------------------------------
-    // SECURITY FILTER CHAIN
-    // -------------------------------
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration cors = new CorsConfiguration();
+
+        cors.setAllowCredentials(false);
+
+        cors.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "https://personal-finance-manager-teal.vercel.app"
+        ));
+
+        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        cors.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        cors.setExposedHeaders(List.of("Authorization"));
+        cors.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cors);
+        return source;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(
@@ -91,18 +98,18 @@ public class SecurityConfig {
             .authenticationProvider(provider)
             .securityContext(sc -> sc.requireExplicitSave(false))
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .cors(cors -> cors.configurationSource(req -> configureCors()));
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         http.authorizeHttpRequests(auth -> auth
-            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Required for CORS preflight
-            
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
             .requestMatchers(
                 "/api/auth/login",
                 "/api/auth/register",
                 "/h2-console/**"
             ).permitAll()
 
-            .requestMatchers("/api/csv/**").authenticated() // CSV import/export FIX
+            .requestMatchers("/api/csv/**").authenticated()
 
             .anyRequest().authenticated()
         );
@@ -113,33 +120,5 @@ public class SecurityConfig {
         );
 
         return http.build();
-    }
-
-    // -------------------------------
-    // CORS CONFIG (FULLY WORKING)
-    // -------------------------------
-
-    private CorsConfiguration configureCors() {
-        CorsConfiguration cors = new CorsConfiguration();
-        cors.setAllowCredentials(true);
-
-        // Supports local dev + Vercel frontend
-        cors.setAllowedOriginPatterns(List.of(
-                "http://localhost:5173",
-                "https://*.vercel.app",
-                "https://personal-finance-manager-teal.vercel.app"
-        ));
-
-        // Support all methods needed by frontend
-        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // Must allow headers for JWT + file uploads
-        cors.setAllowedHeaders(List.of("*"));
-        cors.addAllowedHeader("Content-Type");     
-        cors.addAllowedHeader("Authorization");    
-
-        cors.setExposedHeaders(List.of("Authorization"));
-
-        return cors;
     }
 }

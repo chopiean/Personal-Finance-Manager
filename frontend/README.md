@@ -1,73 +1,113 @@
-# React + TypeScript + Vite
+## 📘 Personal-Finance-Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern full-stack budgeting and personal finance tool built with Spring Boot, React (Vite + TypeScript), JWT Authentication, CSV Import/Export, and a clean Apple-inspired UI.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🔐 User Authentication
 
-## React Compiler
+- Register / Login
+- JWT-based authentication
+- Secure API access with token
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 💰 Accounts
 
-## Expanding the ESLint configuration
+- Create multiple accounts (Cash, Bank, Savings, etc.)
+- Each transaction belongs to an account
+- Real-time balances per account
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 💸 Transactions
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Add incomes & expenses
+- Categorized spending
+- View recent transactions
+- Sorted by newest first
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 📊 Dashboard Overview
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Displays:
+  - Total Balance
+  - Income (this month)
+  - Expense (this month)
+  - Savings Rate
+- Automatically update after adding transactions.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🧾 CSV Import & Export
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Import transactions from CSV file
+- Export all transactions to CSV
+- Supports multipart/form-data upload
+- Automatic backend validation
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🌐 Deployment Ready
+
+- Backend deployed to Railway
+- Frontend deployed to Vercel
+- Fully configured CORS + security
+- Environment-based API switching
+
+## 🏗️ Tech Stack
+
+**Backend (Java + Spring Boot)**
+
+- Spring Boot 3
+- Spring Security (JWT)
+- Spring Data JPA
+- H2 / PostgreSQL
+- Lombok
+- Maven
+- Railway deployment
+
+**Frontend (Typescript + React)**
+
+- Vite
+- React
+- Typescript
+- Modern UI components
+- Fetch wrapper with JWT
+- Vercel deployment
+
+## ⚙️ Backend Setup
+
+**Install dependencies**
+
+cd backend
+mvn clean install
+
+**Run the backend**
+mvn spring-boot:run
+
+Default profiles:
+
+- local -> uses H2 in-memory DB
+- prod -> Railway PostgreSQL
+
+## 🌐 Frontend Setup
+
+**Install dependencies**
+
+cd frontend
+npm install
+
+**Start development server**
+
+npm run dev
+
+## 🛡️ Security Configuration Highlights
+
+- JWT filter
+- CORS with allowed origin patterns
+- Multipart upload support
+- /api/csv/\*\* secured
+- /api/auth/\*\* open
+
+## 📸 Dashboard View
+
+ <img width="1911" height="940" alt="image" src="https://github.com/user-attachments/assets/d6e0a69b-235b-468c-be38-01cad5273ace" />
+
+## 👨‍💻 Author
+
+- An Le
+- 🎓 Haaga-Helia University of Applied Sciences
+- 📧 an.le@myy.haaga-helia.fi
+- 💻 Course: Backend Development — Personal Finance Manager Project

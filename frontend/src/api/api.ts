@@ -1,7 +1,4 @@
-const API_BASE =
-  import.meta.env.MODE === "development"
-    ? "http://localhost:8080/api"
-    : "https://personal-finance-manager-production-a787.up.railway.app/api";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
 export async function apiFetch<T>(
   path: string,

@@ -1,5 +1,10 @@
 HELP.md
 target/
+
+### H2 local database ###
+backend/data/
+*.mv.db
+*.trace.db
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

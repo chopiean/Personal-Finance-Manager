@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { label: "Accounts", path: "/accounts" },
   { label: "Transactions", path: "/transactions" },
   { label: "Budgets", path: "/budgets" },
+  { label: "Reports", path: "/reports" },
   { label: "Import / Export", path: "/csv-upload" },
 ];
 

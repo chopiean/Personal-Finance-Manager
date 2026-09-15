@@ -1,11 +1,12 @@
 package fi.haagahelia.financemanager.security;
 
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
@@ -13,12 +14,11 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY =
-            "dGhpc2lzbXktc2VjcmV0LXNpbXBsZS1qd3Qtc2VjcmV0LWF0LWxlYXN0MzJieXRlcw==";
+    @Value("${jwt.secret}")
+    private String secretKey;
 
     private Key getSignInKey() {
-        byte[] decodedKey = Decoders.BASE64.decode(SECRET_KEY);
-        return Keys.hmacShaKeyFor(decodedKey);
+        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
     // --------------------------------------

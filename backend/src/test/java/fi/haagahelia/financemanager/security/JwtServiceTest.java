@@ -3,12 +3,13 @@ package fi.haagahelia.financemanager.security;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
@@ -18,9 +19,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class JwtServiceTest {
 
     private static final String SECRET_KEY =
-            "dGhpc2lzbXktc2VjcmV0LXNpbXBsZS1qd3Qtc2VjcmV0LWF0LWxlYXN0MzJieXRlcw==";
+            "unit-test-jwt-secret-key-at-least-32-bytes-long";
 
     private final JwtService jwtService = new JwtService();
+
+    {
+        ReflectionTestUtils.setField(jwtService, "secretKey", SECRET_KEY);
+    }
 
     private UserDetails userDetails(String username) {
         return User.withUsername(username).password("pw").roles("USER").build();
@@ -56,7 +61,7 @@ class JwtServiceTest {
 
     @Test
     void isTokenValid_returnsFalse_forExpiredToken() {
-        Key key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
+        Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
         long now = System.currentTimeMillis();
 
         String expiredToken = Jwts.builder()
@@ -81,7 +86,7 @@ class JwtServiceTest {
     @Test
     void extractUsername_throws_forTokenSignedWithDifferentKey() {
         Key otherKey = Keys.hmacShaKeyFor(
-                Decoders.BASE64.decode("YW5vdGhlci1kaWZmZXJlbnQtc2VjcmV0LWtleS1hdC1sZWFzdDMyYg=="));
+                "another-different-secret-key-at-least-32-bytes".getBytes(StandardCharsets.UTF_8));
         String token = Jwts.builder()
                 .setSubject("jdoe")
                 .setIssuedAt(new Date())

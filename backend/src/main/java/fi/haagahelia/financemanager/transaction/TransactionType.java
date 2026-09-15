@@ -5,6 +5,5 @@ package fi.haagahelia.financemanager.transaction;
  */
 public enum TransactionType {
     INCOME,
-    EXPENSE,
-    TRANSFER
+    EXPENSE
 }

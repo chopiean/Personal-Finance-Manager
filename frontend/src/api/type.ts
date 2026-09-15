@@ -12,7 +12,7 @@ export type TransactionResponse = {
   description: string;
   amount: number;
   date: string;
-  type: "INCOME" | "EXPENSE" | "TRANSFER";
+  type: "INCOME" | "EXPENSE";
   accountId: number;
   accountName?: string;
 };

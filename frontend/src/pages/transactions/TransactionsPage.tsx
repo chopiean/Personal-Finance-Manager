@@ -7,7 +7,7 @@ type TransactionForm = {
   description: string;
   amount: string;
   date: string;
-  type: "INCOME" | "EXPENSE" | "TRANSFER";
+  type: "INCOME" | "EXPENSE";
   accountId: string;
 };
 
@@ -92,7 +92,7 @@ export default function TransactionsPage() {
         Transactions
       </h1>
       <p style={{ color: "#6b7280", marginBottom: 34, fontSize: 16 }}>
-        Quickly log your income, expenses and transfers.
+        Quickly log your income and expenses.
       </p>
 
       {/* Two Column Layout */}
@@ -203,7 +203,6 @@ export default function TransactionsPage() {
               >
                 <option value="INCOME">Income</option>
                 <option value="EXPENSE">Expense</option>
-                <option value="TRANSFER">Transfer</option>
               </select>
             </div>
 

@@ -31,4 +31,16 @@ public class UserController {
 
         return userService.toResponse(user);
     }
+
+    // DELETE CURRENT LOGGED-IN USER'S ACCOUNT
+    @DeleteMapping("/me")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteMe(@AuthenticationPrincipal UserDetails principal) {
+        if (principal == null) throw new RuntimeException("Not authenticated");
+
+        var user = userRepository.findByUsername(principal.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        userService.deleteAccount(user.getId());
+    }
 }

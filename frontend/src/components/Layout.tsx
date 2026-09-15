@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Link, useNavigate, Outlet, useLocation } from "react-router-dom";
+import { apiFetch } from "../api/api";
 
 const NAV_ITEMS = [
   { label: "Dashboard", path: "dashboard" },
@@ -12,10 +14,31 @@ const NAV_ITEMS = [
 export default function Layout() {
   const nav = useNavigate();
   const location = useLocation();
+  const [deleting, setDeleting] = useState(false);
 
   function logout() {
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
     nav("/");
+  }
+
+  async function deleteAccount() {
+    const confirmed = window.confirm(
+      "Delete your account? This will permanently remove all your accounts, transactions, and budgets. This cannot be undone."
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      await apiFetch("/auth/me", { method: "DELETE" });
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      nav("/");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete account.");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -101,35 +124,56 @@ export default function Layout() {
           </nav>
         </div>
 
-        <button
-          onClick={logout}
-          style={{
-            width: "100%",
-            padding: "12px 14px",
-            borderRadius: 999,
-            border: "none",
-            background:
-              "linear-gradient(135deg,rgba(248,113,113,1),rgba(239,68,68,1))",
-            color: "white",
-            fontSize: 20,
-            fontWeight: 600,
-            cursor: "pointer",
-            boxShadow: "0 8px 18px rgba(248,113,113,0.35)",
-            transition: "transform 0.1s ease, box-shadow 0.1s ease",
-          }}
-          onMouseEnter={(e) => {
-            const btn = e.target as HTMLButtonElement;
-            btn.style.transform = "translateY(-1px)";
-            btn.style.boxShadow = "0 10px 22px rgba(248,113,113,0.42)";
-          }}
-          onMouseLeave={(e) => {
-            const btn = e.target as HTMLButtonElement;
-            btn.style.transform = "translateY(0)";
-            btn.style.boxShadow = "0 8px 18px rgba(248,113,113,0.35)";
-          }}
-        >
-          Logout
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <button
+            onClick={logout}
+            style={{
+              width: "100%",
+              padding: "12px 14px",
+              borderRadius: 999,
+              border: "none",
+              background:
+                "linear-gradient(135deg,rgba(248,113,113,1),rgba(239,68,68,1))",
+              color: "white",
+              fontSize: 20,
+              fontWeight: 600,
+              cursor: "pointer",
+              boxShadow: "0 8px 18px rgba(248,113,113,0.35)",
+              transition: "transform 0.1s ease, box-shadow 0.1s ease",
+            }}
+            onMouseEnter={(e) => {
+              const btn = e.target as HTMLButtonElement;
+              btn.style.transform = "translateY(-1px)";
+              btn.style.boxShadow = "0 10px 22px rgba(248,113,113,0.42)";
+            }}
+            onMouseLeave={(e) => {
+              const btn = e.target as HTMLButtonElement;
+              btn.style.transform = "translateY(0)";
+              btn.style.boxShadow = "0 8px 18px rgba(248,113,113,0.35)";
+            }}
+          >
+            Logout
+          </button>
+
+          <button
+            onClick={deleteAccount}
+            disabled={deleting}
+            style={{
+              width: "100%",
+              padding: "10px 14px",
+              borderRadius: 999,
+              border: "1px solid rgba(220,38,38,0.4)",
+              background: "transparent",
+              color: "#b91c1c",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: deleting ? "not-allowed" : "pointer",
+              opacity: deleting ? 0.6 : 1,
+            }}
+          >
+            {deleting ? "Deleting..." : "Delete Account"}
+          </button>
+        </div>
       </aside>
 
       {/* MAIN CONTENT */}

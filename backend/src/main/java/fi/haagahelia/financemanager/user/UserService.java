@@ -1,5 +1,8 @@
 package fi.haagahelia.financemanager.user;
 
+import fi.haagahelia.financemanager.account.AccountRepository;
+import fi.haagahelia.financemanager.budget.BudgetRepository;
+import fi.haagahelia.financemanager.transaction.TransactionRepository;
 import fi.haagahelia.financemanager.user.dto.UserRegisterRequest;
 import fi.haagahelia.financemanager.user.dto.UserResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,11 +14,20 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TransactionRepository transactionRepository;
+    private final BudgetRepository budgetRepository;
+    private final AccountRepository accountRepository;
 
     public UserService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder,
+                       TransactionRepository transactionRepository,
+                       BudgetRepository budgetRepository,
+                       AccountRepository accountRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.transactionRepository = transactionRepository;
+        this.budgetRepository = budgetRepository;
+        this.accountRepository = accountRepository;
     }
 
     // ----------------------
@@ -40,6 +52,17 @@ public class UserService {
 
         User saved = userRepository.save(user);
         return toResponse(saved);
+    }
+
+    // ----------------------
+    // DELETE OWN ACCOUNT
+    // ----------------------
+    @Transactional
+    public void deleteAccount(Long userId) {
+        transactionRepository.deleteByAccountUserId(userId);
+        budgetRepository.deleteByAccountUserId(userId);
+        accountRepository.deleteByUserId(userId);
+        userRepository.deleteById(userId);
     }
 
     // ----------------------

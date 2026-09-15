@@ -71,9 +71,9 @@ public class SecurityConfig {
 
         cors.setAllowCredentials(false);
 
-        cors.setAllowedOrigins(List.of(
+        cors.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
-                "https://personal-finance-manager-omega-eight.vercel.app"
+                "https://personal-finance-manager*.vercel.app"
         ));
 
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

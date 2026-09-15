@@ -1,10 +1,14 @@
 package fi.haagahelia.financemanager.user;
 
+import fi.haagahelia.financemanager.account.AccountRepository;
+import fi.haagahelia.financemanager.budget.BudgetRepository;
+import fi.haagahelia.financemanager.transaction.TransactionRepository;
 import fi.haagahelia.financemanager.user.dto.UserRegisterRequest;
 import fi.haagahelia.financemanager.user.dto.UserResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,12 +27,19 @@ class UserServiceTest {
     private UserRepository userRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private TransactionRepository transactionRepository;
+    @Mock
+    private BudgetRepository budgetRepository;
+    @Mock
+    private AccountRepository accountRepository;
 
     private UserService userService;
 
     @BeforeEach
     void setUp() {
-        userService = new UserService(userRepository, passwordEncoder);
+        userService = new UserService(userRepository, passwordEncoder,
+                transactionRepository, budgetRepository, accountRepository);
     }
 
     @Test
@@ -99,6 +110,17 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.getUserById(99L))
                 .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void deleteAccount_deletesInDependencyOrder() {
+        userService.deleteAccount(1L);
+
+        InOrder inOrder = inOrder(transactionRepository, budgetRepository, accountRepository, userRepository);
+        inOrder.verify(transactionRepository).deleteByAccountUserId(1L);
+        inOrder.verify(budgetRepository).deleteByAccountUserId(1L);
+        inOrder.verify(accountRepository).deleteByUserId(1L);
+        inOrder.verify(userRepository).deleteById(1L);
     }
 
     @Test

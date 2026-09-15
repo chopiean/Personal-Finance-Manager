@@ -24,7 +24,7 @@ export default function Layout() {
 
   async function deleteAccount() {
     const confirmed = window.confirm(
-      "Delete your account? This will permanently remove all your accounts, transactions, and budgets. This cannot be undone."
+      "Are you sure to delete your account permanently?"
     );
     if (!confirmed) return;
 
@@ -160,12 +160,12 @@ export default function Layout() {
             disabled={deleting}
             style={{
               width: "100%",
-              padding: "10px 14px",
+              padding: "12px 14px",
               borderRadius: 999,
               border: "1px solid rgba(220,38,38,0.4)",
               background: "transparent",
               color: "#b91c1c",
-              fontSize: 14,
+              fontSize: 18,
               fontWeight: 600,
               cursor: deleting ? "not-allowed" : "pointer",
               opacity: deleting ? 0.6 : 1,

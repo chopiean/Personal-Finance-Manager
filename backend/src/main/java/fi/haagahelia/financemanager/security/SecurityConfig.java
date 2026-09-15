@@ -73,7 +73,8 @@ public class SecurityConfig {
 
         cors.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "https://personal-finance-manager-teal.vercel.app"
+                "https://personal-finance-manager-teal.vercel.app",
+                "https://personal-finance-manager-omega-eight.vercel.app"
         ));
 
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

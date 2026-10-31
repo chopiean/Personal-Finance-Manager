@@ -83,7 +83,8 @@ export default function DashboardPage() {
 
         <DashboardCard
           title="Savings Rate"
-          value={`${summary?.savingsRate ?? 0}%`}
+          value={`${Number((summary?.savingsRate ?? 0).toFixed(1))}%`}
+          color={(summary?.savingsRate ?? 0) < 0 ? "#dc2626" : "#16a34a"}
         />
       </div>
 

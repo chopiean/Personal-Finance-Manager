@@ -20,7 +20,7 @@ public class CsvImportService {
 
     private final TransactionService transactionService;
 
-    public int importCsv(MultipartFile file, Long accountId) {
+    public int importCsv(MultipartFile file, Long accountId, String username) {
         int imported = 0;
 
         try (BufferedReader br = new BufferedReader(
@@ -55,10 +55,13 @@ public class CsvImportService {
                         .accountId(accountId)
                         .build();
 
-                transactionService.createTransactionFromCsv(req);
+                transactionService.createTransactionFromCsv(req, username);
                 imported++;
             }
 
+        } catch (SecurityException e) {
+            // Keep ownership errors distinct so they return 403, not 400
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Failed to import CSV: " + e.getMessage());
         }

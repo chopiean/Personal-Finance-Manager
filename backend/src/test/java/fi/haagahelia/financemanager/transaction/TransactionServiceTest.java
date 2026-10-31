@@ -141,7 +141,8 @@ class TransactionServiceTest {
     }
 
     @Test
-    void createTransactionFromCsv_derivesUserFromAccount() {
+    void createTransactionFromCsv_succeeds_whenAccountBelongsToUser() {
+        when(userRepository.findByUsername("owner")).thenReturn(Optional.of(owner));
         when(accountRepository.findById(5L)).thenReturn(Optional.of(account));
         when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -149,10 +150,24 @@ class TransactionServiceTest {
                 .description("Import").amount(20.0).date(LocalDate.now())
                 .type(TransactionType.INCOME).accountId(5L).build();
 
-        TransactionResponse resp = transactionService.createTransactionFromCsv(req);
+        TransactionResponse resp = transactionService.createTransactionFromCsv(req, "owner");
 
         assertThat(resp.getCategory()).isEqualTo("Import");
-        verifyNoInteractions(userRepository);
+        verify(transactionRepository).save(any(Transaction.class));
+    }
+
+    @Test
+    void createTransactionFromCsv_rejects_whenAccountBelongsToAnotherUser() {
+        when(userRepository.findByUsername("intruder")).thenReturn(Optional.of(otherUser));
+        when(accountRepository.findById(5L)).thenReturn(Optional.of(account));
+
+        TransactionRequest req = TransactionRequest.builder()
+                .description("Import").amount(20.0).date(LocalDate.now())
+                .type(TransactionType.INCOME).accountId(5L).build();
+
+        assertThatThrownBy(() -> transactionService.createTransactionFromCsv(req, "intruder"))
+                .isInstanceOf(SecurityException.class);
+        verify(transactionRepository, never()).save(any());
     }
 
     @Test

@@ -74,18 +74,23 @@ public class TransactionService {
     // CREATE Transaction (CSV Import - user auto detected)
     // ---------------------------------------------------------
     @Transactional
-    public TransactionResponse createTransactionFromCsv(TransactionRequest req) {
+    public TransactionResponse createTransactionFromCsv(TransactionRequest req, String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         Account account = accountRepository.findById(req.getAccountId())
                 .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
-        User user = account.getUser();
-        String category = normalizeCategory(
-        req.getCategory() == null || req.getCategory().isBlank()
-                ? req.getDescription()
-                : req.getCategory()
-);
+        if (!account.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("Account does not belong to user");
+        }
 
+        String category = normalizeCategory(
+                req.getCategory() == null || req.getCategory().isBlank()
+                        ? req.getDescription()
+                        : req.getCategory()
+        );
 
         Transaction tx = Transaction.builder()
                 .description(req.getDescription())

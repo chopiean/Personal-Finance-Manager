@@ -51,10 +51,23 @@ class CsvImportControllerTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "tx.csv", "text/csv", "date,description,category,amount,type\n".getBytes(StandardCharsets.UTF_8));
 
-        when(csvImportService.importCsv(any(), eq(1L))).thenReturn(3);
+        when(csvImportService.importCsv(any(), eq(1L), eq("jdoe"))).thenReturn(3);
 
         mockMvc.perform(multipart("/api/csv/import").file(file).param("accountId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("3 transactions imported"));
+    }
+
+    @Test
+    @WithMockUser(username = "jdoe")
+    void uploadCsv_returns403_whenAccountBelongsToAnotherUser() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "tx.csv", "text/csv", "date,description,category,amount,type\n".getBytes(StandardCharsets.UTF_8));
+
+        when(csvImportService.importCsv(any(), eq(2L), eq("jdoe")))
+                .thenThrow(new SecurityException("Account does not belong to user"));
+
+        mockMvc.perform(multipart("/api/csv/import").file(file).param("accountId", "2"))
+                .andExpect(status().isForbidden());
     }
 }

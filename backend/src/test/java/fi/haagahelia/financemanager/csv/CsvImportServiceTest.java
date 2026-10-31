@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,15 +38,15 @@ class CsvImportServiceTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "transactions.csv", "text/csv", csv.getBytes(StandardCharsets.UTF_8));
 
-        when(transactionService.createTransactionFromCsv(any(TransactionRequest.class)))
+        when(transactionService.createTransactionFromCsv(any(TransactionRequest.class), eq("jdoe")))
                 .thenReturn(TransactionResponse.builder().id(1L).build());
 
-        int count = csvImportService.importCsv(file, 5L);
+        int count = csvImportService.importCsv(file, 5L, "jdoe");
 
         assertThat(count).isEqualTo(2);
 
         ArgumentCaptor<TransactionRequest> captor = ArgumentCaptor.forClass(TransactionRequest.class);
-        verify(transactionService, times(2)).createTransactionFromCsv(captor.capture());
+        verify(transactionService, times(2)).createTransactionFromCsv(captor.capture(), eq("jdoe"));
 
         TransactionRequest first = captor.getAllValues().get(0);
         assertThat(first.getDescription()).isEqualTo("Coffee");
@@ -64,13 +65,13 @@ class CsvImportServiceTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "transactions.csv", "text/csv", csv.getBytes(StandardCharsets.UTF_8));
 
-        when(transactionService.createTransactionFromCsv(any(TransactionRequest.class)))
+        when(transactionService.createTransactionFromCsv(any(TransactionRequest.class), eq("jdoe")))
                 .thenReturn(TransactionResponse.builder().id(1L).build());
 
-        int count = csvImportService.importCsv(file, 5L);
+        int count = csvImportService.importCsv(file, 5L, "jdoe");
 
         assertThat(count).isEqualTo(1);
-        verify(transactionService, times(1)).createTransactionFromCsv(any());
+        verify(transactionService, times(1)).createTransactionFromCsv(any(), eq("jdoe"));
     }
 
     @Test
@@ -80,7 +81,7 @@ class CsvImportServiceTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "transactions.csv", "text/csv", csv.getBytes(StandardCharsets.UTF_8));
 
-        int count = csvImportService.importCsv(file, 5L);
+        int count = csvImportService.importCsv(file, 5L, "jdoe");
 
         assertThat(count).isEqualTo(0);
         verifyNoInteractions(transactionService);
@@ -94,7 +95,7 @@ class CsvImportServiceTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "transactions.csv", "text/csv", csv.getBytes(StandardCharsets.UTF_8));
 
-        assertThatThrownBy(() -> csvImportService.importCsv(file, 5L))
+        assertThatThrownBy(() -> csvImportService.importCsv(file, 5L, "jdoe"))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Failed to import CSV");
     }
@@ -107,8 +108,23 @@ class CsvImportServiceTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "transactions.csv", "text/csv", csv.getBytes(StandardCharsets.UTF_8));
 
-        assertThatThrownBy(() -> csvImportService.importCsv(file, 5L))
+        assertThatThrownBy(() -> csvImportService.importCsv(file, 5L, "jdoe"))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Failed to import CSV");
+    }
+
+    @Test
+    void importCsv_propagatesSecurityException_whenAccountNotOwned() {
+        String csv = "date,description,category,amount,type\n"
+                + "2025-01-01,Coffee,Food,4.50,EXPENSE\n";
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "transactions.csv", "text/csv", csv.getBytes(StandardCharsets.UTF_8));
+
+        when(transactionService.createTransactionFromCsv(any(TransactionRequest.class), eq("jdoe")))
+                .thenThrow(new SecurityException("Account does not belong to user"));
+
+        assertThatThrownBy(() -> csvImportService.importCsv(file, 5L, "jdoe"))
+                .isInstanceOf(SecurityException.class);
     }
 }

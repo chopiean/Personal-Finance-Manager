@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../../api/api";
+import { formatDate } from "../../utils/formatDate";
 
 // ----- Types -----
 type DashboardSummary = {
@@ -126,7 +127,7 @@ export default function DashboardPage() {
             <div>
               <strong>{t.description}</strong>
               <p style={{ color: "#6b7280", marginTop: 4, fontSize: 14 }}>
-                {t.date}
+                {formatDate(t.date)}
               </p>
             </div>
 

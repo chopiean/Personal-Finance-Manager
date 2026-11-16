@@ -76,6 +76,7 @@ describe("TransactionsPage", () => {
 
     expect(await screen.findByText("Groceries")).toBeInTheDocument();
     expect(screen.getByText("-€42.50")).toBeInTheDocument();
+    expect(screen.getByText("01-09-2026")).toBeInTheDocument();
     expect(screen.getByText("Cash")).toBeInTheDocument();
   });
 

@@ -8,6 +8,7 @@ import type {
 import CategorySelect from "../../components/CategorySelect";
 import DeleteButton from "../../components/DeleteButton";
 import { categoriesFor } from "../../constants/categories";
+import { formatDate } from "../../utils/formatDate";
 
 type TransactionForm = {
   description: string;
@@ -351,7 +352,7 @@ export default function TransactionsPage() {
                         borderRadius: 12,
                       }}
                     >
-                      <td style={{ padding: "12px 2px" }}>{t.date}</td>
+                      <td style={{ padding: "12px 2px" }}>{formatDate(t.date)}</td>
                       <td>{t.description}</td>
                       <td>{t.accountName ?? t.accountId}</td>
 

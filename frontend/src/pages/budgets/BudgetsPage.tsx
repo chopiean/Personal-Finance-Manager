@@ -37,6 +37,7 @@ export default function BudgetsPage() {
 
   return (
     <div
+      className="pfm-page"
       style={{
         padding: "40px 24px",
         maxWidth: 1000,
@@ -45,6 +46,7 @@ export default function BudgetsPage() {
     >
       {/* Title */}
       <h1
+        className="pfm-title"
         style={{
           fontSize: 34,
           fontWeight: 700,
@@ -60,6 +62,7 @@ export default function BudgetsPage() {
 
       {/* Main card */}
       <div
+        className="pfm-card"
         style={{
           background: "white",
           padding: "28px 26px 24px",
@@ -77,6 +80,7 @@ export default function BudgetsPage() {
           </p>
         ) : (
           <div
+            className="responsive-grid"
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",

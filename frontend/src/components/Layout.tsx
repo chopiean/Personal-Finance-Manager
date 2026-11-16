@@ -16,6 +16,8 @@ export default function Layout() {
   const nav = useNavigate();
   const location = useLocation();
   const [deleting, setDeleting] = useState(false);
+  // Only used on narrow screens, where the sidebar is a slide-in drawer.
+  const [menuOpen, setMenuOpen] = useState(false);
 
   function logout() {
     localStorage.removeItem("token");
@@ -44,19 +46,53 @@ export default function Layout() {
 
   return (
     <div
+      className="app-layout"
       style={{
-        display: "flex",
-        height: "100vh",
         background: "linear-gradient(120deg,#f5f7fb,#eef2ff)",
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif',
       }}
     >
+      {/* MOBILE TOP BAR (hidden on wide screens via CSS) */}
+      <header className="mobile-topbar">
+        <button
+          type="button"
+          aria-label="Open menu"
+          aria-expanded={menuOpen}
+          aria-controls="app-sidebar"
+          onClick={() => setMenuOpen(true)}
+          style={{
+            background: "transparent",
+            border: "1px solid rgba(148,163,184,0.4)",
+            borderRadius: 10,
+            padding: "6px 10px",
+            fontSize: 20,
+            lineHeight: 1,
+            cursor: "pointer",
+            color: "#0f172a",
+          }}
+        >
+          ☰
+        </button>
+        <span style={{ fontSize: 22, fontWeight: 700, color: "#0f172a" }}>
+          Finance
+        </span>
+      </header>
+
+      {/* BACKDROP (mobile only, while the menu is open) */}
+      {menuOpen && (
+        <div
+          className="sidebar-backdrop"
+          aria-hidden="true"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
       {/* SIDEBAR */}
       <aside
+        id="app-sidebar"
+        className={menuOpen ? "sidebar open" : "sidebar"}
         style={{
-          width: 320,
-          minWidth: 320,
           padding: "32px 26px 28px",
           display: "flex",
           flexDirection: "column",
@@ -68,17 +104,42 @@ export default function Layout() {
         }}
       >
         <div>
-          <h1
+          <div
             style={{
-              fontSize: 32,
-              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
               marginBottom: 24,
-              color: "#0f172a",
-              letterSpacing: 0.2,
             }}
           >
-            Finance
-          </h1>
+            <h1
+              style={{
+                fontSize: 32,
+                fontWeight: 700,
+                margin: 0,
+                color: "#0f172a",
+                letterSpacing: 0.2,
+              }}
+            >
+              Finance
+            </h1>
+            <button
+              type="button"
+              className="sidebar-close"
+              aria-label="Close menu"
+              onClick={() => setMenuOpen(false)}
+              style={{
+                background: "transparent",
+                border: "none",
+                fontSize: 26,
+                lineHeight: 1,
+                cursor: "pointer",
+                color: "#475569",
+              }}
+            >
+              ×
+            </button>
+          </div>
 
           <nav
             style={{
@@ -97,6 +158,7 @@ export default function Layout() {
                 <Link
                   key={item.path}
                   to={item.path}
+                  onClick={() => setMenuOpen(false)}
                   style={{
                     padding: "10px 14px",
                     borderRadius: 12,
@@ -178,10 +240,8 @@ export default function Layout() {
       </aside>
       {/* MAIN CONTENT */}
       <main
+        className="app-main"
         style={{
-          flex: 1,
-          padding: "28px 40px",
-          overflowY: "auto",
           background: "linear-gradient(135deg,#f9fbff,#ffffff)",
         }}
       >

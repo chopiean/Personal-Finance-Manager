@@ -63,6 +63,7 @@ export default function AccountsPage() {
 
   return (
     <div
+      className="pfm-page"
       style={{
         padding: "40px 24px",
         maxWidth: 980,
@@ -71,6 +72,7 @@ export default function AccountsPage() {
     >
       {/* Title */}
       <h1
+        className="pfm-title"
         style={{
           fontSize: 36,
           fontWeight: 700,
@@ -86,6 +88,7 @@ export default function AccountsPage() {
 
       {/* 2-column layout */}
       <div
+        className="responsive-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
@@ -94,6 +97,7 @@ export default function AccountsPage() {
       >
         {/* LEFT CARD */}
         <div
+          className="pfm-card"
           style={{
             background: "white",
             padding: "32px 28px",
@@ -199,6 +203,7 @@ export default function AccountsPage() {
 
         {/* RIGHT CARD */}
         <div
+          className="pfm-card table-scroll"
           style={{
             background: "white",
             padding: "32px 28px",

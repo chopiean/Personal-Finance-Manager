@@ -5,6 +5,7 @@ export default function WelcomePage() {
 
   return (
     <div
+      className="auth-screen"
       style={{
         position: "fixed",
         inset: 0,
@@ -17,6 +18,7 @@ export default function WelcomePage() {
       }}
     >
       <div
+        className="auth-card"
         style={{
           width: "100%",
           maxWidth: 500,
@@ -28,6 +30,7 @@ export default function WelcomePage() {
         }}
       >
         <h1
+          className="pfm-title"
           style={{
             fontSize: 34,
             fontWeight: 700,

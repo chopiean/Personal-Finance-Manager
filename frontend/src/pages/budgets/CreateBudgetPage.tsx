@@ -55,6 +55,7 @@ export default function CreateBudgetPage() {
 
   return (
     <div
+      className="pfm-page"
       style={{
         padding: "40px 24px",
         maxWidth: 720,
@@ -63,6 +64,7 @@ export default function CreateBudgetPage() {
     >
       {/* Title */}
       <h1
+        className="pfm-title"
         style={{
           fontSize: 34,
           fontWeight: 700,
@@ -79,6 +81,7 @@ export default function CreateBudgetPage() {
 
       {/* Main Card */}
       <div
+        className="pfm-card"
         style={{
           background: "white",
           padding: "32px 28px",

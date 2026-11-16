@@ -37,6 +37,7 @@ export default function LoginPage() {
 
   return (
     <div
+      className="auth-screen"
       style={{
         position: "fixed",
         inset: 0,
@@ -49,6 +50,7 @@ export default function LoginPage() {
       }}
     >
       <div
+        className="auth-card"
         style={{
           width: "100%",
           maxWidth: 500,

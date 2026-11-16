@@ -67,6 +67,7 @@ export default function ChatWidget() {
       <button
         aria-label={open ? "Close AI assistant" : "Open AI assistant"}
         onClick={() => setOpen((o) => !o)}
+        className="chat-fab"
         style={{
           position: "fixed",
           right: 28,
@@ -91,6 +92,7 @@ export default function ChatWidget() {
         <div
           role="dialog"
           aria-label="AI assistant"
+          className="chat-panel"
           style={{
             position: "fixed",
             right: 28,

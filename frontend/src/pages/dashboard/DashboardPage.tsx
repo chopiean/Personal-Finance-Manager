@@ -37,6 +37,7 @@ export default function DashboardPage() {
 
   return (
     <div
+      className="pfm-page"
       style={{
         padding: "40px",
         maxWidth: 1200,
@@ -46,6 +47,7 @@ export default function DashboardPage() {
     >
       {/* Header */}
       <h1
+        className="pfm-title"
         style={{
           fontSize: 32,
           fontWeight: 700,
@@ -122,9 +124,10 @@ export default function DashboardPage() {
               borderBottom: "1px solid #f0f0f0",
               display: "flex",
               justifyContent: "space-between",
+              gap: 12,
             }}
           >
-            <div>
+            <div style={{ minWidth: 0, overflowWrap: "anywhere" }}>
               <strong>{t.description}</strong>
               <p style={{ color: "#6b7280", marginTop: 4, fontSize: 14 }}>
                 {formatDate(t.date)}
@@ -158,6 +161,7 @@ function DashboardCard({
 }) {
   return (
     <div
+      className="pfm-card"
       style={{
         padding: 24,
         borderRadius: 20,
@@ -167,7 +171,7 @@ function DashboardCard({
       }}
     >
       <p style={{ color: "#6b7280" }}>{title}</p>
-      <h2 style={{ fontSize: 32, fontWeight: 700, marginTop: 6, color }}>
+      <h2 className="pfm-stat-value" style={{ fontSize: 32, fontWeight: 700, marginTop: 6, color }}>
         {value}
       </h2>
     </div>

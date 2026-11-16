@@ -108,6 +108,7 @@ export default function TransactionsPage() {
 
   return (
     <div
+      className="pfm-page"
       style={{
         padding: "40px 24px",
         maxWidth: 1100,
@@ -116,6 +117,7 @@ export default function TransactionsPage() {
     >
       {/* Page Title */}
       <h1
+        className="pfm-title"
         style={{
           fontSize: 34,
           fontWeight: 700,
@@ -131,6 +133,7 @@ export default function TransactionsPage() {
 
       {/* Two Column Layout */}
       <div
+        className="responsive-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "1.1fr 2fr",
@@ -139,6 +142,7 @@ export default function TransactionsPage() {
       >
         {/* LEFT CARD: New Transaction */}
         <div
+          className="pfm-card"
           style={{
             background: "white",
             padding: "32px 28px",
@@ -301,6 +305,7 @@ export default function TransactionsPage() {
 
         {/* RIGHT CARD: Recent Transactions */}
         <div
+          className="pfm-card"
           style={{
             background: "white",
             padding: "32px 14px",
@@ -319,7 +324,7 @@ export default function TransactionsPage() {
             Recent Transactions
           </h2>
 
-          <div>
+          <div className="table-scroll">
             {transactions.length === 0 ? (
               <p style={{ color: "#9ca3af", marginTop: 8 }}>
                 No transactions yet.

@@ -34,6 +34,7 @@ export default function RegisterPage() {
 
   return (
     <div
+      className="auth-screen"
       style={{
         position: "fixed",
         inset: 0,
@@ -47,6 +48,7 @@ export default function RegisterPage() {
     >
       {/* Register Card */}
       <div
+        className="auth-card"
         style={{
           width: "100%",
           maxWidth: 500,

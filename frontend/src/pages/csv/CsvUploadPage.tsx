@@ -152,10 +152,24 @@ export default function CsvUploadPage() {
   };
 
   return (
-    <section className="card apple-card" style={{ padding: 20 }}>
-      <h1 className="page-title">Transactions Import / Export</h1>
-      <p className="page-subtitle">
-        Upload a CSV file containing your transactions.
+    <section
+      className="pfm-page"
+      style={{ padding: "40px 24px", maxWidth: 720, margin: "0 auto" }}
+    >
+      {/* Same heading style as the other pages */}
+      <h1
+        className="pfm-title"
+        style={{
+          fontSize: 34,
+          fontWeight: 700,
+          marginBottom: 5,
+          letterSpacing: "-0.5px",
+        }}
+      >
+        Import / Export
+      </h1>
+      <p style={{ color: "#6b7280", marginBottom: 28, fontSize: 16 }}>
+        Export your transactions or import them from a CSV file.
       </p>
 
       {/* Export Button */}
@@ -195,7 +209,7 @@ export default function CsvUploadPage() {
         type="file"
         accept=".csv"
         onChange={(e) => setFile(e.target.files?.[0] || null)}
-        style={{ margin: "20px 0", display: "block" }}
+        style={{ margin: "20px 0", display: "block", maxWidth: "100%" }}
       />
 
       {/* Import Button */}

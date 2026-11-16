@@ -89,8 +89,8 @@ export default function ReportsPage() {
   }
 
   return (
-    <div style={{ padding: "40px 24px", maxWidth: 1000, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 34, fontWeight: 700, marginBottom: 5, letterSpacing: "-0.5px" }}>
+    <div className="pfm-page" style={{ padding: "40px 24px", maxWidth: 1000, margin: "0 auto" }}>
+      <h1 className="pfm-title" style={{ fontSize: 34, fontWeight: 700, marginBottom: 5, letterSpacing: "-0.5px" }}>
         Reports
       </h1>
       <p style={{ color: "#6b7280", marginBottom: 28, fontSize: 16 }}>
@@ -123,13 +123,14 @@ export default function ReportsPage() {
         <p style={{ color: "#9ca3af" }}>No transactions for this month.</p>
       ) : (
         <div
+          className="responsive-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
             gap: 24,
           }}
         >
-          <div style={cardStyle}>
+          <div className="pfm-card" style={cardStyle}>
             <h2 style={cardTitleStyle}>Expenses by Category</h2>
             {expenseCategories.length === 0 ? (
               <p style={{ color: "#9ca3af" }}>No expenses recorded.</p>
@@ -141,7 +142,7 @@ export default function ReportsPage() {
             )}
           </div>
 
-          <div style={cardStyle}>
+          <div className="pfm-card" style={cardStyle}>
             <h2 style={cardTitleStyle}>Income vs Expense</h2>
             <Bar
               data={barData}
@@ -152,9 +153,9 @@ export default function ReportsPage() {
             />
           </div>
 
-          <div style={{ ...cardStyle, gridColumn: "1 / -1" }}>
+          <div className="pfm-card" style={{ ...cardStyle, gridColumn: "1 / -1" }}>
             <h2 style={cardTitleStyle}>Monthly Summary</h2>
-            <div style={{ display: "flex", gap: 32 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px 32px" }}>
               <SummaryStat label="Income" value={data.totalIncome} color="#16a34a" />
               <SummaryStat label="Expense" value={data.totalExpense} color="#dc2626" />
               <SummaryStat label="Net" value={data.netBalance} color="#111827" />

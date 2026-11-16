@@ -59,4 +59,31 @@ describe("Layout", () => {
     expect(localStorage.getItem("user")).toBeNull();
     expect(screen.getByText("Welcome Page")).toBeInTheDocument();
   });
+
+  it("opens and closes the mobile menu", async () => {
+    const user = userEvent.setup();
+    renderLayout("/dashboard");
+
+    const openBtn = screen.getByRole("button", { name: "Open menu" });
+    const sidebar = document.getElementById("app-sidebar")!;
+    expect(sidebar).not.toHaveClass("open");
+
+    await user.click(openBtn);
+    expect(sidebar).toHaveClass("open");
+    expect(openBtn).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(screen.getByRole("button", { name: "Close menu" }));
+    expect(sidebar).not.toHaveClass("open");
+  });
+
+  it("closes the mobile menu after choosing a page", async () => {
+    const user = userEvent.setup();
+    renderLayout("/dashboard");
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    await user.click(screen.getByText("Accounts"));
+
+    expect(document.getElementById("app-sidebar")).not.toHaveClass("open");
+    expect(screen.getByText("Accounts Content")).toBeInTheDocument();
+  });
 });

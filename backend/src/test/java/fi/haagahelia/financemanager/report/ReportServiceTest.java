@@ -136,6 +136,32 @@ class ReportServiceTest {
     }
 
     @Test
+    void getMonthlySummary_budgetMatchesCategoryIgnoringCaseAndWhitespace() {
+        when(userRepository.findByUsername("jdoe")).thenReturn(Optional.of(user));
+
+        Transaction t1 = Transaction.builder().id(1L).description("Netflix").category("subscriptions ")
+                .amount(30).date(LocalDate.of(2025, 3, 5)).type(TransactionType.EXPENSE)
+                .account(account).user(user).build();
+        Transaction t2 = Transaction.builder().id(2L).description("Spotify").category("SUBSCRIPTIONS")
+                .amount(10).date(LocalDate.of(2025, 3, 6)).type(TransactionType.EXPENSE)
+                .account(account).user(user).build();
+
+        when(transactionRepository.findByAccountUserIdAndDateBetween(1L,
+                LocalDate.of(2025, 3, 1), LocalDate.of(2025, 3, 31)))
+                .thenReturn(List.of(t1, t2));
+
+        Budget budget = Budget.builder().id(1L).category("Subscriptions").limitAmount(100.0)
+                .month(3).year(2025).account(account).user(user).build();
+        when(budgetRepository.findByAccountUserIdAndYearAndMonth(1L, 2025, 3))
+                .thenReturn(List.of(budget));
+
+        MonthlySummaryResponse resp = reportService.getMonthlySummary(2025, 3, null, "jdoe");
+
+        assertThat(resp.getBudgetStatuses().get(0).getCategory()).isEqualTo("Subscriptions");
+        assertThat(resp.getBudgetStatuses().get(0).getActualExpense()).isEqualTo(40.0);
+    }
+
+    @Test
     void getMonthlySummary_throws_whenUserNotFound() {
         when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
 

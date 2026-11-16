@@ -6,28 +6,8 @@ import type {
   BudgetResponse,
   TransactionResponse,
 } from "../../api/type";
-
-const DEFAULT_CATEGORIES = [
-  "Groceries",
-  "Rent",
-  "Transport",
-  "Subscriptions",
-  "Entertainment",
-  "Salary",
-];
-
-// Budget categories first, then defaults; de-duplicated case-insensitively.
-function mergeCategories(budgetCategories: string[]): string[] {
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const raw of [...budgetCategories, ...DEFAULT_CATEGORIES]) {
-    const c = raw?.trim();
-    if (!c || seen.has(c.toLowerCase())) continue;
-    seen.add(c.toLowerCase());
-    result.push(c);
-  }
-  return result;
-}
+import CategorySelect from "../../components/CategorySelect";
+import { categoriesFor } from "../../constants/categories";
 
 type TransactionForm = {
   description: string;
@@ -49,9 +29,7 @@ export default function TransactionsPage() {
     accountId: "",
     category: "",
   }));
-  const [categories, setCategories] = useState<string[]>(() =>
-    mergeCategories([])
-  );
+  const [budgetCategories, setBudgetCategories] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -72,9 +50,9 @@ export default function TransactionsPage() {
         const budgets = await apiFetch<BudgetResponse[]>(
           `/budgets?year=${now.getFullYear()}&month=${now.getMonth() + 1}`
         );
-        setCategories(mergeCategories((budgets ?? []).map((b) => b.category)));
+        setBudgetCategories((budgets ?? []).map((b) => b.category));
       } catch {
-        // keep default categories
+        // standard categories are still available
       }
     };
     void loadBudgetCategories();
@@ -84,7 +62,12 @@ export default function TransactionsPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) =>
+      // Income and expense have different categories, so reset on type change.
+      name === "type" && value !== prev.type
+        ? { ...prev, type: value as TransactionForm["type"], category: "" }
+        : { ...prev, [name]: value }
+    );
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -99,7 +82,7 @@ export default function TransactionsPage() {
         date: form.date,
         type: form.type,
         accountId: Number(form.accountId),
-        ...(form.category ? { category: form.category } : {}),
+        ...(form.category.trim() ? { category: form.category.trim() } : {}),
       };
 
       const created = await apiFetch<TransactionResponse>("/transactions", {
@@ -277,31 +260,14 @@ export default function TransactionsPage() {
             </div>
 
             {/* Category */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <label className="field-label" htmlFor="tx-category">
-                Category
-              </label>
-              <select
-                id="tx-category"
-                className="select"
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-                style={{
-                  padding: "12px 14px",
-                  borderRadius: 12,
-                  border: "1px solid #d1d5db",
-                  fontSize: 15,
-                }}
-              >
-                <option value="">No category</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <CategorySelect
+              id="tx-category"
+              value={form.category}
+              onChange={(category) => setForm((prev) => ({ ...prev, category }))}
+              options={categoriesFor(form.type)}
+              budgetCategories={form.type === "EXPENSE" ? budgetCategories : []}
+              emptyLabel="No category"
+            />
 
             {/* Submit Button */}
             <button

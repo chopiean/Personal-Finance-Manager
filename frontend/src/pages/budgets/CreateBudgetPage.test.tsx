@@ -54,8 +54,8 @@ describe("CreateBudgetPage", () => {
 
     await screen.findByRole("option", { name: "Cash (EUR)" });
 
-    await user.type(
-      screen.getByPlaceholderText("Or enter custom category…"),
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Category" }),
       "Groceries"
     );
 
@@ -82,5 +82,44 @@ describe("CreateBudgetPage", () => {
 
     expect(window.alert).toHaveBeenCalledWith("Budget created!");
     expect(await screen.findByText("Budgets Page")).toBeInTheDocument();
+  });
+
+  it("allows a custom category", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(accounts);
+    vi.mocked(apiFetch).mockResolvedValueOnce({});
+
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByRole("option", { name: "Cash (EUR)" });
+
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Category" }),
+      "Custom…"
+    );
+    await user.type(
+      screen.getByRole("textbox", { name: "Custom category" }),
+      "  Pets  "
+    );
+
+    const [limitInput] = screen.getAllByRole("spinbutton");
+    await user.type(limitInput, "50");
+    const [, accountSelect] = screen.getAllByRole("combobox");
+    await user.selectOptions(accountSelect, "1");
+
+    await user.click(screen.getByRole("button", { name: "Create Budget" }));
+
+    await waitFor(() =>
+      expect(apiFetch).toHaveBeenLastCalledWith("/budgets", {
+        method: "POST",
+        body: JSON.stringify({
+          category: "Pets",
+          limitAmount: 50,
+          month: new Date().getMonth() + 1,
+          year: new Date().getFullYear(),
+          accountId: 1,
+        }),
+      })
+    );
   });
 });

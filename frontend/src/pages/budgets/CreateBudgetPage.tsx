@@ -4,25 +4,8 @@ import { apiFetch } from "../../api/api";
 import { useNavigate } from "react-router-dom";
 
 import type { AccountResponse } from "../../api/type";
-
-// 🔥 Predefined categories used across the app & CSV import
-const CATEGORY_OPTIONS = [
-  "Shopping",
-  "Groceries",
-  "Transport",
-  "Bills",
-  "Restaurants",
-  "Entertainment",
-  "Health",
-  "Travel",
-  "Subscriptions",
-  "Gifts",
-  "Education",
-  "Salary",
-  "Side Income",
-  "Savings",
-  "Uncategorized",
-];
+import CategorySelect from "../../components/CategorySelect";
+import { EXPENSE_CATEGORIES } from "../../constants/categories";
 
 export default function CreateBudgetPage() {
   const nav = useNavigate();
@@ -54,7 +37,7 @@ export default function CreateBudgetPage() {
     e.preventDefault();
 
     const payload = {
-      category: form.category,
+      category: form.category.trim(),
       limitAmount: Number(form.limitAmount),
       month: Number(form.month),
       year: Number(form.year),
@@ -112,45 +95,14 @@ export default function CreateBudgetPage() {
             gap: 20,
           }}
         >
-          {/* Category Dropdown + Custom Input */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <label className="field-label">Category</label>
-
-            <select
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              style={{
-                padding: "12px 14px",
-                borderRadius: 12,
-                border: "1px solid #d1d5db",
-                fontSize: 15,
-              }}
-            >
-              <option value="">Select category…</option>
-              {CATEGORY_OPTIONS.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-
-            {/* Optional custom text */}
-            <input
-              className="input"
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              placeholder="Or enter custom category…"
-              style={{
-                marginTop: 6,
-                padding: "12px 14px",
-                borderRadius: 12,
-                border: "1px solid #d1d5db",
-                fontSize: 15,
-              }}
-            />
-          </div>
+          {/* Category (same list as transactions, so budgets match) */}
+          <CategorySelect
+            id="budget-category"
+            value={form.category}
+            onChange={(category) => setForm((prev) => ({ ...prev, category }))}
+            options={[...EXPENSE_CATEGORIES]}
+            emptyLabel="Select category…"
+          />
 
           {/* Limit */}
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

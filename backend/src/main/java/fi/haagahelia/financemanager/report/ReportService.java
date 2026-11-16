@@ -121,13 +121,12 @@ public class ReportService {
 
         // -----------------------------------------------------
         // 5) EXPENSE BY CATEGORY FOR BUDGET COMPARISON
+        //    (keyed case/whitespace-insensitively so "subscriptions " matches "Subscriptions")
         // -----------------------------------------------------
         Map<String, Double> expenseByCategory = txs.stream()
                 .filter(t -> t.getType() == TransactionType.EXPENSE)
                 .collect(Collectors.groupingBy(
-                        t -> Optional.ofNullable(t.getCategory())
-                                .filter(s -> !s.isBlank())
-                                .orElse("Uncategorized"),
+                        t -> categoryKey(t.getCategory()),
                         Collectors.summingDouble(Transaction::getAmount)
                 ));
 
@@ -140,7 +139,7 @@ public class ReportService {
                             .filter(s -> !s.isBlank())
                             .orElse("Uncategorized");
 
-                    double actual = expenseByCategory.getOrDefault(cat, 0.0);
+                    double actual = expenseByCategory.getOrDefault(categoryKey(cat), 0.0);
                     double limit = Optional.ofNullable(b.getLimitAmount()).orElse(0.0);
                     double diff = limit - actual;
 
@@ -168,5 +167,10 @@ public class ReportService {
                 .categories(categoryList)
                 .budgetStatuses(budgetStatuses)
                 .build();
+    }
+
+    private static String categoryKey(String category) {
+        if (category == null || category.isBlank()) return "uncategorized";
+        return category.trim().toLowerCase(java.util.Locale.ROOT);
     }
 }

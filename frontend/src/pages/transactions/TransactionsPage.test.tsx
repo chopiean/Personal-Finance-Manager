@@ -185,4 +185,21 @@ describe("TransactionsPage", () => {
       await screen.findByRole("option", { name: "Subscriptions" })
     ).toBeInTheDocument();
   });
+
+  it("shows income categories for income and resets the category on type change", async () => {
+    mockApi({ accounts });
+
+    const user = userEvent.setup();
+    render(<TransactionsPage />);
+
+    const category = await screen.findByRole("combobox", { name: "Category" });
+    await user.selectOptions(category, "Groceries");
+
+    const [typeSelect] = screen.getAllByRole("combobox");
+    await user.selectOptions(typeSelect, "INCOME");
+
+    expect(category).toHaveValue("");
+    expect(screen.getByRole("option", { name: "Salary" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Groceries" })).toBeNull();
+  });
 });

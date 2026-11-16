@@ -85,7 +85,7 @@ class AuthControllerTest {
         UserRegisterRequest req = new UserRegisterRequest();
         req.setUsername("jdoe");
         req.setEmail("jdoe@example.com");
-        req.setPassword("pw");
+        req.setPassword("Secret12!");
 
         when(userService.register(any(UserRegisterRequest.class)))
                 .thenReturn(new UserResponse(1L, "jdoe", "jdoe@example.com", "ROLE_USER"));
@@ -95,5 +95,35 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("jdoe"));
+    }
+
+    @Test
+    void register_returns400_whenEmailInvalid() throws Exception {
+        UserRegisterRequest req = new UserRegisterRequest();
+        req.setUsername("jdoe");
+        req.setEmail("not-an-email");
+        req.setPassword("Secret12!");
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.email").exists());
+    }
+
+    @Test
+    void register_returns400_whenPasswordTooWeak() throws Exception {
+        for (String weak : new String[]{"Sh0rt!", "NoDigits!!", "NoSpecial123"}) {
+            UserRegisterRequest req = new UserRegisterRequest();
+            req.setUsername("jdoe");
+            req.setEmail("jdoe@example.com");
+            req.setPassword(weak);
+
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(req)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.password").exists());
+        }
     }
 }

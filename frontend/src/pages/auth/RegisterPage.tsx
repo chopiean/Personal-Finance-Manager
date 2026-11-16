@@ -2,30 +2,69 @@ import { useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
 import { useNavigate } from "react-router-dom";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function validateEmail(email: string): string | null {
+  return EMAIL_RE.test(email.trim()) ? null : "Please enter a valid email address.";
+}
+
+function validatePassword(password: string): string | null {
+  if (password.length < 8) return "Password must be at least 8 characters.";
+  if (!/\d/.test(password)) return "Password must contain a number.";
+  if (!/[^A-Za-z0-9]/.test(password))
+    return "Password must contain a special character.";
+  return null;
+}
+
+const errorTextStyle = {
+  color: "#dc2626",
+  fontSize: 13,
+  textAlign: "left" as const,
+  margin: "-8px 0 12px",
+};
+
 export default function RegisterPage() {
   const nav = useNavigate();
   const [username, setUser] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPass] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   async function handleRegister(e?: FormEvent) {
     if (e) e.preventDefault();
+
+    const emailErr = validateEmail(email);
+    const passwordErr = validatePassword(password);
+    setEmailError(emailErr);
+    setPasswordError(passwordErr);
+    if (emailErr || passwordErr) return;
+
     setLoading(true);
 
     try {
       await apiFetch("/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, email }),
+        body: JSON.stringify({ username, password, email: email.trim() }),
       });
       localStorage.removeItem("token");
 
       alert("Registration successfil");
       nav("/login");
     } catch (err) {
-      const message =
+      let message =
         err instanceof Error ? err.message : "Unknown registration error";
+      // Backend validation errors come back as a JSON map of field -> message
+      try {
+        const parsed = JSON.parse(message);
+        if (parsed && typeof parsed === "object") {
+          message = Object.values(parsed).join(" ");
+        }
+      } catch {
+        /* plain-text error, keep as is */
+      }
       alert("Registration failed. " + message);
     } finally {
       setLoading(false);
@@ -75,7 +114,7 @@ export default function RegisterPage() {
           Start managing your finances smarter.
         </p>
 
-        <form onSubmit={handleRegister}>
+        <form onSubmit={handleRegister} noValidate>
           {/* Email Input */}
           <input
             placeholder="Choose username"
@@ -98,13 +137,18 @@ export default function RegisterPage() {
           />
           <input
             placeholder="Email address"
+            type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (emailError) setEmailError(validateEmail(e.target.value));
+            }}
             required
+            aria-invalid={!!emailError}
             style={{
               width: "100%",
               padding: "14px 16px",
-              border: "1px solid #d1d5db",
+              border: `1px solid ${emailError ? "#dc2626" : "#d1d5db"}`,
               marginBottom: 14,
               fontSize: 15,
               outline: "none",
@@ -113,21 +157,32 @@ export default function RegisterPage() {
             onFocus={(e) =>
               (e.target.style.borderColor = "rgba(34,197,94,0.7)")
             }
-            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+            onBlur={(e) =>
+              (e.target.style.borderColor = emailError ? "#dc2626" : "#d1d5db")
+            }
           />
+          {emailError && (
+            <p role="alert" style={errorTextStyle}>
+              {emailError}
+            </p>
+          )}
 
           {/* Password Input */}
           <input
-            placeholder="Create password (min 6 characters)"
+            placeholder="Create password"
             type="password"
             value={password}
-            onChange={(e) => setPass(e.target.value)}
+            onChange={(e) => {
+              setPass(e.target.value);
+              if (passwordError) setPasswordError(validatePassword(e.target.value));
+            }}
             required
+            aria-invalid={!!passwordError}
             style={{
               width: "100%",
               padding: "14px 16px",
-              border: "1px solid #d1d5db",
-              marginBottom: 22,
+              border: `1px solid ${passwordError ? "#dc2626" : "#d1d5db"}`,
+              marginBottom: 14,
               fontSize: 15,
               outline: "none",
               transition: "0.2s",
@@ -135,8 +190,25 @@ export default function RegisterPage() {
             onFocus={(e) =>
               (e.target.style.borderColor = "rgba(34,197,94,0.7)")
             }
-            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+            onBlur={(e) =>
+              (e.target.style.borderColor = passwordError ? "#dc2626" : "#d1d5db")
+            }
           />
+          {passwordError ? (
+            <p role="alert" style={errorTextStyle}>
+              {passwordError}
+            </p>
+          ) : (
+            <p
+              style={{
+                ...errorTextStyle,
+                color: "#6b7280",
+              }}
+            >
+              At least 8 characters, including a number and a special character.
+            </p>
+          )}
+          <div style={{ height: 8 }} />
 
           {/* Register Button */}
           <button

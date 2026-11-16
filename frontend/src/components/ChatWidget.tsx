@@ -19,6 +19,32 @@ export default function ChatWidget() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  // While open, close on a click/tap outside the panel or on Escape.
+  // The toggle button is excluded so its own onClick decides open/close.
+  useEffect(() => {
+    if (!open) return;
+
+    function onPointerDown(e: PointerEvent) {
+      const target = e.target as Node;
+      if (panelRef.current?.contains(target)) return;
+      if (toggleRef.current?.contains(target)) return;
+      setOpen(false);
+    }
+
+    function onKey(e: globalThis.KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView?.({ behavior: "smooth" });
@@ -66,19 +92,20 @@ export default function ChatWidget() {
       {/* Floating toggle button */}
       <button
         aria-label={open ? "Close AI assistant" : "Open AI assistant"}
+        ref={toggleRef}
         onClick={() => setOpen((o) => !o)}
         className="chat-fab"
         style={{
           position: "fixed",
           right: 28,
           bottom: 28,
-          width: 60,
-          height: 60,
+          width: 68,
+          height: 68,
           borderRadius: "50%",
           border: "none",
           background: "linear-gradient(135deg,#3b82f6,#6366f1)",
           color: "white",
-          fontSize: 26,
+          fontSize: 30,
           cursor: "pointer",
           boxShadow: "0 10px 25px rgba(59,130,246,0.4)",
           zIndex: 1000,
@@ -92,11 +119,12 @@ export default function ChatWidget() {
         <div
           role="dialog"
           aria-label="AI assistant"
+          ref={panelRef}
           className="chat-panel"
           style={{
             position: "fixed",
             right: 28,
-            bottom: 100,
+            bottom: 108,
             width: 380,
             maxWidth: "calc(100vw - 40px)",
             height: 540,

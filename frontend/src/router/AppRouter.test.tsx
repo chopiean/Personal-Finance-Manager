@@ -82,7 +82,7 @@ describe("AppRouter", () => {
 
     expect(await screen.findByText("Welcome back 👋")).toBeInTheDocument();
     // Layout sidebar should be visible
-    expect(screen.getByText("Finance")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Finance" })).toBeInTheDocument();
   });
 
   it("renders the accounts page inside the Layout when authenticated", async () => {

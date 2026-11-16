@@ -13,7 +13,7 @@ public class MonthlySummaryScheduler {
 
     private final ReportService reportService;
 
-    @Scheduled(cron = "0 0 1 * * ?") // every month
+    @Scheduled(cron = "0 0 1 1 * ?") // 01:00 on the 1st of every month
     public void generateMonthlySummary() {
         LocalDate now = LocalDate.now();
         int year = now.getYear();

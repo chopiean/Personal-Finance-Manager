@@ -35,7 +35,7 @@ class FullFlowIntegrationTest {
     void registerLoginCreateAccountCreateTransactionAndReadReports() throws Exception {
         String username = "integrationUser";
         String email = "integration@example.com";
-        String password = "SuperSecret123";
+        String password = "SuperSecret123!";
 
         // 1. REGISTER
         String registerPayload = objectMapper.writeValueAsString(new java.util.HashMap<>() {{

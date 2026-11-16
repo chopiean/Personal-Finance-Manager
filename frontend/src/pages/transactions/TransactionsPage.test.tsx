@@ -127,7 +127,7 @@ describe("TransactionsPage", () => {
       })
     );
 
-    expect(await screen.findByText("Salary")).toBeInTheDocument();
+    expect(await screen.findByRole("cell", { name: "Salary" })).toBeInTheDocument();
   });
 
   it("lists budget categories in the dropdown and sends the chosen category", async () => {

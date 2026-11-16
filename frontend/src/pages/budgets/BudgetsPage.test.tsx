@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import BudgetsPage from "./BudgetsPage";
@@ -31,6 +31,7 @@ const summary: MonthlySummaryResponse = {
   categories: [],
   budgetStatuses: [
     {
+      budgetId: 1,
       category: "Groceries",
       budgetLimit: 300,
       actualExpense: 320,
@@ -38,6 +39,7 @@ const summary: MonthlySummaryResponse = {
       overBudget: true,
     },
     {
+      budgetId: 2,
       category: "Entertainment",
       budgetLimit: 100,
       actualExpense: 40,
@@ -95,5 +97,36 @@ describe("BudgetsPage", () => {
     await user.click(screen.getByRole("button", { name: "Add Budget" }));
 
     expect(screen.getByText("Create Budget Page")).toBeInTheDocument();
+  });
+
+  it("deletes a budget after confirmation", async () => {
+    vi.mocked(apiFetch).mockImplementation(async (path: string) =>
+      (path.startsWith("/reports") ? summary : null) as never
+    );
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const user = userEvent.setup();
+
+    renderPage();
+
+    await screen.findByText("Groceries");
+    await user.click(screen.getByRole("button", { name: "Delete Groceries budget" }));
+
+    expect(apiFetch).toHaveBeenCalledWith("/budgets/1", { method: "DELETE" });
+    await waitFor(() => expect(screen.queryByText("Groceries")).toBeNull());
+    expect(screen.getByText("Entertainment")).toBeInTheDocument();
+  });
+
+  it("keeps the budget when deletion is cancelled", async () => {
+    vi.mocked(apiFetch).mockResolvedValue(summary);
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    const user = userEvent.setup();
+
+    renderPage();
+
+    await screen.findByText("Groceries");
+    await user.click(screen.getByRole("button", { name: "Delete Groceries budget" }));
+
+    expect(apiFetch).not.toHaveBeenCalledWith("/budgets/1", { method: "DELETE" });
+    expect(screen.getByText("Groceries")).toBeInTheDocument();
   });
 });

@@ -51,4 +51,17 @@ public class AccountController {
                 .sorted(Comparator.comparing(AccountResponse::getName))
                 .toList();
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAccount(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails principal
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        accountService.deleteAccount(id, principal.getUsername());
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
 import type { AccountResponse } from "../../api/type";
+import DeleteButton from "../../components/DeleteButton";
 
 type AccountForm = {
   name: string;
@@ -29,6 +30,11 @@ export default function AccountsPage() {
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const deleteAccount = async (a: AccountResponse) => {
+    await apiFetch(`/accounts/${a.id}`, { method: "DELETE" });
+    setAccounts((prev) => prev.filter((x) => x.id !== a.id));
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -223,6 +229,7 @@ export default function AccountsPage() {
                   <th>Name</th>
                   <th>Currency</th>
                   <th>Balance</th>
+                  <th aria-label="Actions" />
                 </tr>
               </thead>
 
@@ -246,15 +253,22 @@ export default function AccountsPage() {
                       {a.name}
                     </td>
                     <td>{a.currency}</td>
+                    <td style={{ fontWeight: 600 }}>
+                      €{a.initialBalance.toFixed(2)}
+                    </td>
                     <td
                       style={{
+                        textAlign: "right",
                         paddingRight: 10,
-                        fontWeight: 600,
                         borderTopRightRadius: 12,
                         borderBottomRightRadius: 12,
                       }}
                     >
-                      €{a.initialBalance.toFixed(2)}
+                      <DeleteButton
+                        label={`Delete ${a.name}`}
+                        confirmMessage={`Delete account "${a.name}"? All of its transactions and budgets will also be deleted. This cannot be undone.`}
+                        onDelete={() => deleteAccount(a)}
+                      />
                     </td>
                   </tr>
                 ))}

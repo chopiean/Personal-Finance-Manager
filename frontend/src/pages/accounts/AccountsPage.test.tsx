@@ -83,4 +83,44 @@ describe("AccountsPage", () => {
     expect(await screen.findByText("Savings")).toBeInTheDocument();
     expect(screen.getByText("€250.00")).toBeInTheDocument();
   });
+
+  it("deletes an account after confirming it also removes its data", async () => {
+    vi.mocked(apiFetch).mockImplementation(async (_path: string, init?: RequestInit) =>
+      (init?.method === "DELETE" ? null : accounts) as never
+    );
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const user = userEvent.setup();
+
+    render(<AccountsPage />);
+
+    await screen.findByText("Cash");
+    await user.click(screen.getByRole("button", { name: "Delete Cash" }));
+
+    expect(confirm).toHaveBeenCalledWith(
+      expect.stringContaining("transactions and budgets will also be deleted")
+    );
+    expect(apiFetch).toHaveBeenCalledWith("/accounts/1", { method: "DELETE" });
+    await waitFor(() => expect(screen.queryByText("Cash")).toBeNull());
+    expect(screen.getByText("Bank")).toBeInTheDocument();
+  });
+
+  it("shows an error and keeps the account when deletion fails", async () => {
+    vi.mocked(apiFetch).mockImplementation(async (_path: string, init?: RequestInit) => {
+      if (init?.method === "DELETE") throw new Error("Server error");
+      return accounts as never;
+    });
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const alert = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const user = userEvent.setup();
+
+    render(<AccountsPage />);
+
+    await screen.findByText("Cash");
+    await user.click(screen.getByRole("button", { name: "Delete Cash" }));
+
+    await waitFor(() =>
+      expect(alert).toHaveBeenCalledWith("Could not delete. Server error")
+    );
+    expect(screen.getByText("Cash")).toBeInTheDocument();
+  });
 });

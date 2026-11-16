@@ -2,6 +2,8 @@ package fi.haagahelia.financemanager.account;
 
 import fi.haagahelia.financemanager.account.dto.AccountRequest;
 import fi.haagahelia.financemanager.account.dto.AccountResponse;
+import fi.haagahelia.financemanager.budget.BudgetRepository;
+import fi.haagahelia.financemanager.transaction.TransactionRepository;
 import fi.haagahelia.financemanager.user.User;
 import fi.haagahelia.financemanager.user.UserRepository;
 
@@ -18,6 +20,8 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
+    private final BudgetRepository budgetRepository;
 
     @Transactional
     public AccountResponse createAccount(AccountRequest req, String username) {
@@ -55,6 +59,29 @@ public class AccountService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    /**
+     * Deletes the account together with its transactions and budgets,
+     * which reference it and cannot exist without it.
+     */
+    @Transactional
+    public void deleteAccount(Long id, String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("User not found: " + username));
+
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+
+        if (!account.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("Unauthorized");
+        }
+
+        transactionRepository.deleteByAccountId(id);
+        budgetRepository.deleteByAccountId(id);
+        accountRepository.delete(account);
     }
 
     private AccountResponse toResponse(Account acc) {

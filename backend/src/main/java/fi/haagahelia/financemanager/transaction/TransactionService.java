@@ -201,6 +201,7 @@ public class TransactionService {
                 double difference = budget.getLimitAmount() - actualExpense;
 
                 return BudgetStatus.builder()
+                        .budgetId(budget.getId())
                         .category(budget.getCategory())
                         .budgetLimit(budget.getLimitAmount())
                         .actualExpense(actualExpense)

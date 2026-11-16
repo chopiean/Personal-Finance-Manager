@@ -35,6 +35,7 @@ export type CategorySummary = {
 };
 
 export type BudgetStatus = {
+  budgetId: number;
   category: string;
   budgetLimit: number;
   actualExpense: number;

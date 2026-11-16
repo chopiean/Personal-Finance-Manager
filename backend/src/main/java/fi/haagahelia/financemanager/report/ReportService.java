@@ -144,6 +144,7 @@ public class ReportService {
                     double diff = limit - actual;
 
                     return BudgetStatus.builder()
+                            .budgetId(b.getId())
                             .category(cat)
                             .budgetLimit(limit)
                             .actualExpense(actual)

@@ -1,4 +1,3 @@
-// src/pages/transactions/TransactionsPage.tsx
 import { useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
 import type {
@@ -7,6 +6,7 @@ import type {
   TransactionResponse,
 } from "../../api/type";
 import CategorySelect from "../../components/CategorySelect";
+import DeleteButton from "../../components/DeleteButton";
 import { categoriesFor } from "../../constants/categories";
 
 type TransactionForm = {
@@ -43,7 +43,6 @@ export default function TransactionsPage() {
     };
     void load();
 
-    // Budget categories are optional suggestions; never block the page on them.
     const loadBudgetCategories = async () => {
       try {
         const now = new Date();
@@ -68,6 +67,11 @@ export default function TransactionsPage() {
         ? { ...prev, type: value as TransactionForm["type"], category: "" }
         : { ...prev, [name]: value }
     );
+  };
+
+  const deleteTransaction = async (t: TransactionResponse) => {
+    await apiFetch(`/transactions/${t.id}`, { method: "DELETE" });
+    setTransactions((prev) => prev.filter((x) => x.id !== t.id));
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -128,8 +132,8 @@ export default function TransactionsPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1.4fr",
-          gap: 32,
+          gridTemplateColumns: "1.1fr 2fr",
+          gap: 28,
         }}
       >
         {/* LEFT CARD: New Transaction */}
@@ -263,7 +267,9 @@ export default function TransactionsPage() {
             <CategorySelect
               id="tx-category"
               value={form.category}
-              onChange={(category) => setForm((prev) => ({ ...prev, category }))}
+              onChange={(category) =>
+                setForm((prev) => ({ ...prev, category }))
+              }
               options={categoriesFor(form.type)}
               budgetCategories={form.type === "EXPENSE" ? budgetCategories : []}
               emptyLabel="No category"
@@ -296,7 +302,7 @@ export default function TransactionsPage() {
         <div
           style={{
             background: "white",
-            padding: "32px 28px",
+            padding: "32px 14px",
             borderRadius: 20,
             boxShadow: "0 12px 32px rgba(0,0,0,0.08)",
             border: "1px solid #eef0f2",
@@ -332,6 +338,7 @@ export default function TransactionsPage() {
                     <th>Account</th>
                     <th>Type</th>
                     <th style={{ textAlign: "right" }}>Amount</th>
+                    <th aria-label="Actions" />
                   </tr>
                 </thead>
 
@@ -344,14 +351,14 @@ export default function TransactionsPage() {
                         borderRadius: 12,
                       }}
                     >
-                      <td style={{ padding: "12px 8px" }}>{t.date}</td>
+                      <td style={{ padding: "12px 2px" }}>{t.date}</td>
                       <td>{t.description}</td>
                       <td>{t.accountName ?? t.accountId}</td>
 
                       <td>
                         <span
                           style={{
-                            padding: "4px 10px",
+                            padding: "4px 6px",
                             borderRadius: 12,
                             fontSize: 13,
                             fontWeight: 600,
@@ -366,6 +373,22 @@ export default function TransactionsPage() {
 
                       <td style={{ textAlign: "right", fontWeight: 600 }}>
                         {t.type === "EXPENSE" ? "-" : "+"}€{t.amount.toFixed(2)}
+                      </td>
+
+                      <td
+                        style={{
+                          textAlign: "right",
+                          paddingLeft: 12,
+                          paddingRight: 8,
+                        }}
+                      >
+                        <DeleteButton
+                          label={`Delete ${t.description}`}
+                          confirmMessage={`Delete "${
+                            t.description
+                          }" (€${t.amount.toFixed(2)})? This cannot be undone.`}
+                          onDelete={() => deleteTransaction(t)}
+                        />
                       </td>
                     </tr>
                   ))}

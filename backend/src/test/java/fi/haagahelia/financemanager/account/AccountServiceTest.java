@@ -2,6 +2,8 @@ package fi.haagahelia.financemanager.account;
 
 import fi.haagahelia.financemanager.account.dto.AccountRequest;
 import fi.haagahelia.financemanager.account.dto.AccountResponse;
+import fi.haagahelia.financemanager.budget.BudgetRepository;
+import fi.haagahelia.financemanager.transaction.TransactionRepository;
 import fi.haagahelia.financemanager.user.User;
 import fi.haagahelia.financemanager.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +31,12 @@ class AccountServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private TransactionRepository transactionRepository;
+
+    @Mock
+    private BudgetRepository budgetRepository;
 
     @InjectMocks
     private AccountService accountService;
@@ -147,6 +155,47 @@ class AccountServiceTest {
         when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> accountService.getAccountsForUser("ghost"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void deleteAccount_removesTransactionsBudgetsAndAccount() {
+        Account acc = Account.builder().id(5L).name("Main").currency("EUR")
+                .initialBalance(BigDecimal.ZERO).type(AccountType.BANK).user(user).build();
+        when(userRepository.findByUsername("jdoe")).thenReturn(Optional.of(user));
+        when(accountRepository.findById(5L)).thenReturn(Optional.of(acc));
+
+        accountService.deleteAccount(5L, "jdoe");
+
+        var inOrder = inOrder(transactionRepository, budgetRepository, accountRepository);
+        inOrder.verify(transactionRepository).deleteByAccountId(5L);
+        inOrder.verify(budgetRepository).deleteByAccountId(5L);
+        inOrder.verify(accountRepository).delete(acc);
+    }
+
+    @Test
+    void deleteAccount_throws_whenAccountBelongsToAnotherUser() {
+        User other = new User("other", "other@example.com", "hashed", "ROLE_USER");
+        setId(other, 2L);
+        Account acc = Account.builder().id(5L).name("Theirs").currency("EUR")
+                .initialBalance(BigDecimal.ZERO).type(AccountType.BANK).user(other).build();
+        when(userRepository.findByUsername("jdoe")).thenReturn(Optional.of(user));
+        when(accountRepository.findById(5L)).thenReturn(Optional.of(acc));
+
+        assertThatThrownBy(() -> accountService.deleteAccount(5L, "jdoe"))
+                .isInstanceOf(SecurityException.class);
+
+        verify(transactionRepository, never()).deleteByAccountId(any());
+        verify(budgetRepository, never()).deleteByAccountId(any());
+        verify(accountRepository, never()).delete(any());
+    }
+
+    @Test
+    void deleteAccount_throws_whenAccountNotFound() {
+        when(userRepository.findByUsername("jdoe")).thenReturn(Optional.of(user));
+        when(accountRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> accountService.deleteAccount(99L, "jdoe"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

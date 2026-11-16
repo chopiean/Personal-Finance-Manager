@@ -36,6 +36,7 @@ function mockApi(opts: {
   created?: TransactionResponse;
 }) {
   vi.mocked(apiFetch).mockImplementation(async (path: string, init?: RequestInit) => {
+    if (init?.method === "DELETE") return null as never;
     if (path === "/transactions") {
       if (init?.method === "POST") return opts.created as never;
       return (opts.transactions ?? []) as never;
@@ -201,5 +202,19 @@ describe("TransactionsPage", () => {
     expect(category).toHaveValue("");
     expect(screen.getByRole("option", { name: "Salary" })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: "Groceries" })).toBeNull();
+  });
+
+  it("deletes a transaction after confirmation", async () => {
+    mockApi({ transactions, accounts });
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const user = userEvent.setup();
+
+    render(<TransactionsPage />);
+
+    await screen.findByText("Groceries");
+    await user.click(screen.getByRole("button", { name: "Delete Groceries" }));
+
+    expect(apiFetch).toHaveBeenCalledWith("/transactions/1", { method: "DELETE" });
+    expect(await screen.findByText("No transactions yet.")).toBeInTheDocument();
   });
 });

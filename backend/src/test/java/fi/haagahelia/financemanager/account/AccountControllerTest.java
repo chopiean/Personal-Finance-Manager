@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -111,6 +112,21 @@ class AccountControllerTest {
     @Test
     void getAccounts_returns401_whenUnauthenticated() throws Exception {
         mockMvc.perform(get("/api/accounts"))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @WithMockUser(username = "jdoe")
+    void deleteAccount_returns204() throws Exception {
+        mockMvc.perform(delete("/api/accounts/5"))
+                .andExpect(status().isNoContent());
+
+        verify(accountService).deleteAccount(5L, "jdoe");
+    }
+
+    @Test
+    void deleteAccount_returns401_whenUnauthenticated() throws Exception {
+        mockMvc.perform(delete("/api/accounts/5"))
                 .andExpect(status().is4xxClientError());
     }
 }

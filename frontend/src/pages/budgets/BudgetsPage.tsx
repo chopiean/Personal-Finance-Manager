@@ -4,6 +4,7 @@ import { apiFetch } from "../../api/api";
 import { useNavigate } from "react-router-dom";
 
 import type { MonthlySummaryResponse, BudgetStatus } from "../../api/type";
+import DeleteButton from "../../components/DeleteButton";
 
 export default function BudgetsPage() {
   const [budgets, setBudgets] = useState<BudgetStatus[]>([]);
@@ -28,6 +29,11 @@ export default function BudgetsPage() {
 
     void load();
   }, []);
+
+  const deleteBudget = async (b: BudgetStatus) => {
+    await apiFetch(`/budgets/${b.budgetId}`, { method: "DELETE" });
+    setBudgets((prev) => prev.filter((x) => x.budgetId !== b.budgetId));
+  };
 
   return (
     <div
@@ -87,7 +93,7 @@ export default function BudgetsPage() {
 
               return (
                 <div
-                  key={b.category}
+                  key={b.budgetId}
                   style={{
                     padding: "18px 18px 16px",
                     borderRadius: 18,
@@ -176,6 +182,14 @@ export default function BudgetsPage() {
                   >
                     {b.difference >= 0 ? "Left" : "Over"}: €{" "}
                     {Math.abs(b.difference).toFixed(2)}
+                  </div>
+
+                  <div style={{ marginTop: 4, textAlign: "right" }}>
+                    <DeleteButton
+                      label={`Delete ${b.category} budget`}
+                      confirmMessage={`Delete the "${b.category}" budget? Your transactions will not be affected.`}
+                      onDelete={() => deleteBudget(b)}
+                    />
                   </div>
                 </div>
               );

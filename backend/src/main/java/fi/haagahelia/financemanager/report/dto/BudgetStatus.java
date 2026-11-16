@@ -11,6 +11,8 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class BudgetStatus {
+
+    private Long budgetId;
     
     private String category;
 

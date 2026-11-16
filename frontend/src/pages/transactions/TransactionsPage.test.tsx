@@ -3,7 +3,11 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TransactionsPage from "./TransactionsPage";
 import { apiFetch } from "../../api/api";
-import type { AccountResponse, TransactionResponse } from "../../api/type";
+import type {
+  AccountResponse,
+  BudgetResponse,
+  TransactionResponse,
+} from "../../api/type";
 
 vi.mock("../../api/api", () => ({
   apiFetch: vi.fn(),
@@ -25,6 +29,26 @@ const transactions: TransactionResponse[] = [
   },
 ];
 
+function mockApi(opts: {
+  transactions?: TransactionResponse[];
+  accounts?: AccountResponse[];
+  budgets?: BudgetResponse[] | Error;
+  created?: TransactionResponse;
+}) {
+  vi.mocked(apiFetch).mockImplementation(async (path: string, init?: RequestInit) => {
+    if (path === "/transactions") {
+      if (init?.method === "POST") return opts.created as never;
+      return (opts.transactions ?? []) as never;
+    }
+    if (path === "/accounts") return (opts.accounts ?? []) as never;
+    if (path.startsWith("/budgets")) {
+      if (opts.budgets instanceof Error) throw opts.budgets;
+      return (opts.budgets ?? []) as never;
+    }
+    throw new Error(`unexpected path ${path}`);
+  });
+}
+
 describe("TransactionsPage", () => {
   beforeEach(() => {
     vi.mocked(apiFetch).mockReset();
@@ -35,7 +59,7 @@ describe("TransactionsPage", () => {
   });
 
   it("loads transactions and accounts and shows the empty state when there are none", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    mockApi({});
 
     render(<TransactionsPage />);
 
@@ -45,9 +69,7 @@ describe("TransactionsPage", () => {
   });
 
   it("renders fetched transactions in the table", async () => {
-    vi.mocked(apiFetch)
-      .mockResolvedValueOnce(transactions)
-      .mockResolvedValueOnce(accounts);
+    mockApi({ transactions, accounts });
 
     render(<TransactionsPage />);
 
@@ -57,10 +79,6 @@ describe("TransactionsPage", () => {
   });
 
   it("submits a new transaction and prepends it to the list", async () => {
-    vi.mocked(apiFetch)
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce(accounts);
-
     const created: TransactionResponse = {
       id: 2,
       description: "Salary",
@@ -70,7 +88,7 @@ describe("TransactionsPage", () => {
       accountId: 1,
       accountName: "Cash",
     };
-    vi.mocked(apiFetch).mockResolvedValueOnce(created);
+    mockApi({ accounts, created });
 
     const user = userEvent.setup();
     render(<TransactionsPage />);
@@ -108,5 +126,63 @@ describe("TransactionsPage", () => {
     );
 
     expect(await screen.findByText("Salary")).toBeInTheDocument();
+  });
+
+  it("lists budget categories in the dropdown and sends the chosen category", async () => {
+    const budgets: BudgetResponse[] = [
+      { id: 1, category: "Streaming", limitAmount: 50, month: 11, year: 2026, accountId: 1 },
+    ];
+    const created: TransactionResponse = {
+      id: 3,
+      description: "Netflix",
+      amount: 30,
+      date: "2026-11-16",
+      type: "EXPENSE",
+      accountId: 1,
+      accountName: "Cash",
+    };
+    mockApi({ accounts, budgets, created });
+
+    const user = userEvent.setup();
+    render(<TransactionsPage />);
+
+    await screen.findByRole("option", { name: "Cash (EUR)" });
+    await screen.findByRole("option", { name: "Streaming" });
+
+    await user.type(
+      screen.getByPlaceholderText("Groceries, Rent, Salary…"),
+      "Netflix"
+    );
+    await user.type(screen.getByRole("spinbutton"), "30");
+    const [, accountSelect, categorySelect] = screen.getAllByRole("combobox");
+    await user.selectOptions(accountSelect, "1");
+    await user.selectOptions(categorySelect, "Streaming");
+
+    await user.click(screen.getByRole("button", { name: "Add transaction" }));
+
+    const today = new Date().toISOString().slice(0, 10);
+    await waitFor(() =>
+      expect(apiFetch).toHaveBeenLastCalledWith("/transactions", {
+        method: "POST",
+        body: JSON.stringify({
+          description: "Netflix",
+          amount: 30,
+          date: today,
+          type: "EXPENSE",
+          accountId: 1,
+          category: "Streaming",
+        }),
+      })
+    );
+  });
+
+  it("falls back to default categories when budgets fail to load", async () => {
+    mockApi({ accounts, budgets: new Error("boom") });
+
+    render(<TransactionsPage />);
+
+    expect(
+      await screen.findByRole("option", { name: "Subscriptions" })
+    ).toBeInTheDocument();
   });
 });

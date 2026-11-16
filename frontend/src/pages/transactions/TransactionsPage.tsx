@@ -1,7 +1,33 @@
 // src/pages/transactions/TransactionsPage.tsx
 import { useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
-import type { AccountResponse, TransactionResponse } from "../../api/type";
+import type {
+  AccountResponse,
+  BudgetResponse,
+  TransactionResponse,
+} from "../../api/type";
+
+const DEFAULT_CATEGORIES = [
+  "Groceries",
+  "Rent",
+  "Transport",
+  "Subscriptions",
+  "Entertainment",
+  "Salary",
+];
+
+// Budget categories first, then defaults; de-duplicated case-insensitively.
+function mergeCategories(budgetCategories: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const raw of [...budgetCategories, ...DEFAULT_CATEGORIES]) {
+    const c = raw?.trim();
+    if (!c || seen.has(c.toLowerCase())) continue;
+    seen.add(c.toLowerCase());
+    result.push(c);
+  }
+  return result;
+}
 
 type TransactionForm = {
   description: string;
@@ -9,6 +35,7 @@ type TransactionForm = {
   date: string;
   type: "INCOME" | "EXPENSE";
   accountId: string;
+  category: string;
 };
 
 export default function TransactionsPage() {
@@ -20,7 +47,11 @@ export default function TransactionsPage() {
     date: new Date().toISOString().slice(0, 10),
     type: "EXPENSE",
     accountId: "",
+    category: "",
   }));
+  const [categories, setCategories] = useState<string[]>(() =>
+    mergeCategories([])
+  );
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -33,6 +64,20 @@ export default function TransactionsPage() {
       setAccounts(acc);
     };
     void load();
+
+    // Budget categories are optional suggestions; never block the page on them.
+    const loadBudgetCategories = async () => {
+      try {
+        const now = new Date();
+        const budgets = await apiFetch<BudgetResponse[]>(
+          `/budgets?year=${now.getFullYear()}&month=${now.getMonth() + 1}`
+        );
+        setCategories(mergeCategories((budgets ?? []).map((b) => b.category)));
+      } catch {
+        // keep default categories
+      }
+    };
+    void loadBudgetCategories();
   }, []);
 
   const handleChange = (
@@ -54,6 +99,7 @@ export default function TransactionsPage() {
         date: form.date,
         type: form.type,
         accountId: Number(form.accountId),
+        ...(form.category ? { category: form.category } : {}),
       };
 
       const created = await apiFetch<TransactionResponse>("/transactions", {
@@ -225,6 +271,33 @@ export default function TransactionsPage() {
                 {accounts.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.name} ({a.currency})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Category */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label className="field-label" htmlFor="tx-category">
+                Category
+              </label>
+              <select
+                id="tx-category"
+                className="select"
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  border: "1px solid #d1d5db",
+                  fontSize: 15,
+                }}
+              >
+                <option value="">No category</option>
+                {categories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
                   </option>
                 ))}
               </select>

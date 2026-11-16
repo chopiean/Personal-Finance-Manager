@@ -15,6 +15,16 @@ export type TransactionResponse = {
   type: "INCOME" | "EXPENSE";
   accountId: number;
   accountName?: string;
+  category?: string;
+};
+
+export type BudgetResponse = {
+  id: number;
+  category: string;
+  limitAmount: number;
+  month: number;
+  year: number;
+  accountId: number;
 };
 
 export type CategorySummary = {

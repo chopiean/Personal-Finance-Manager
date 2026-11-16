@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, Outlet, useLocation } from "react-router-dom";
 import { apiFetch } from "../api/api";
+import ChatWidget from "./ChatWidget";
 
 const NAV_ITEMS = [
   { label: "Dashboard", path: "dashboard" },
@@ -175,7 +176,6 @@ export default function Layout() {
           </button>
         </div>
       </aside>
-
       {/* MAIN CONTENT */}
       <main
         style={{
@@ -194,6 +194,7 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+      <ChatWidget />
     </div>
   );
 }

@@ -1,11 +1,7 @@
 package fi.haagahelia.financemanager.dashboard;
 
-import fi.haagahelia.financemanager.account.Account;
-import fi.haagahelia.financemanager.account.AccountRepository;
-import fi.haagahelia.financemanager.account.AccountType;
 import fi.haagahelia.financemanager.security.JwtService;
-import fi.haagahelia.financemanager.transaction.TransactionRepository;
-import fi.haagahelia.financemanager.user.User;
+import fi.haagahelia.financemanager.transaction.TransactionType;
 import fi.haagahelia.financemanager.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +11,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -33,13 +26,10 @@ class DashboardControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
+    private DashboardService dashboardService;
+
+    @MockBean
     private UserRepository userRepository;
-
-    @MockBean
-    private AccountRepository accountRepository;
-
-    @MockBean
-    private TransactionRepository transactionRepository;
 
     @MockBean
     private JwtService jwtService;
@@ -52,20 +42,29 @@ class DashboardControllerTest {
 
     @Test
     @WithMockUser(username = "jdoe")
-    void dashboard_returnsSummary_onSuccess() throws Exception {
-        User user = new User("jdoe", "jdoe@example.com", "hashed", "ROLE_USER");
-        when(userRepository.findByUsername("jdoe")).thenReturn(Optional.of(user));
-
-        Account account = Account.builder()
-                .id(1L).name("Main").currency("EUR")
-                .initialBalance(BigDecimal.valueOf(200)).type(AccountType.BANK)
-                .archived(false).createdAt(LocalDate.now()).user(user).build();
-
-        when(accountRepository.findByUser(user)).thenReturn(List.of(account));
-        when(transactionRepository.findByAccountUserId(null)).thenReturn(List.of());
+    void dashboard_returnsSummaryAndRecentTransactions() throws Exception {
+        var summary = new DashboardResponse.Summary(1100, 1000, 400, 60);
+        var recent = List.of(new DashboardResponse.RecentTransactionItem(
+                2L, "Rent", 400, "2026-11-02", TransactionType.EXPENSE));
+        when(dashboardService.buildDashboard()).thenReturn(new DashboardResponse(summary, recent));
 
         mockMvc.perform(get("/api/dashboard"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.summary.totalBalance").value(200.0));
+                .andExpect(jsonPath("$.summary.totalBalance").value(1100.0))
+                .andExpect(jsonPath("$.recentTransactions[0].description").value("Rent"));
+    }
+
+    @Test
+    @WithMockUser(username = "jdoe")
+    void dashboard_doesNotExposeUserOrAccountData() throws Exception {
+        var recent = List.of(new DashboardResponse.RecentTransactionItem(
+                2L, "Rent", 400, "2026-11-02", TransactionType.EXPENSE));
+        when(dashboardService.buildDashboard()).thenReturn(
+                new DashboardResponse(new DashboardResponse.Summary(0, 0, 0, 0), recent));
+
+        mockMvc.perform(get("/api/dashboard"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.recentTransactions[0].user").doesNotExist())
+                .andExpect(jsonPath("$.recentTransactions[0].account").doesNotExist());
     }
 }

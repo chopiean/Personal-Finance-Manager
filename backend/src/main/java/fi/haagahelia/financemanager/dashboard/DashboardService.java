@@ -32,29 +32,37 @@ public class DashboardService {
 
         User user = currentUserService.getCurrentUser();
 
-        // TOTAL BALANCE (all accounts)
-        double totalBalance = accountRepository.findByUserId(user.getId())
+        // TOTAL BALANCE = initial balances + all income - all expenses
+        double initialBalances = accountRepository.findByUserId(user.getId())
                 .stream()
                 .mapToDouble(a -> a.getInitialBalance().doubleValue())
                 .sum();
 
-        // --- FIX: CURRENT MONTH ONLY ---
-        YearMonth currentMonth = YearMonth.now(); // Example: 2025-01
+        double netTransactions = transactionRepository.findByAccountUserId(user.getId())
+                .stream()
+                .mapToDouble(t -> t.getType() == TransactionType.INCOME
+                        ? t.getAmount()
+                        : -t.getAmount())
+                .sum();
+
+        double totalBalance = initialBalances + netTransactions;
+
+        // CURRENT MONTH ONLY
+        YearMonth currentMonth = YearMonth.now();
         LocalDate start = currentMonth.atDay(1);
         LocalDate end = currentMonth.atEndOfMonth();
 
-        List<Transaction> allUserTx =
+        List<Transaction> monthTx =
                 transactionRepository.findByAccountUserIdAndDateBetween(
                         user.getId(), start, end
                 );
 
-        // SUM INCOME & EXPENSE FOR THIS MONTH
-        double income = allUserTx.stream()
+        double income = monthTx.stream()
                 .filter(t -> t.getType() == TransactionType.INCOME)
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 
-        double expenses = allUserTx.stream()
+        double expenses = monthTx.stream()
                 .filter(t -> t.getType() == TransactionType.EXPENSE)
                 .mapToDouble(Transaction::getAmount)
                 .sum();
@@ -62,7 +70,7 @@ public class DashboardService {
         double savingsRate =
                 (income == 0) ? 0 : ((income - expenses) / income) * 100;
 
-        // RECENT TRANSACTIONS (TOP 5 ONLY)
+        // RECENT TRANSACTIONS (TOP 5), mapped to a DTO so no entity data leaks
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         List<DashboardResponse.RecentTransactionItem> recent =

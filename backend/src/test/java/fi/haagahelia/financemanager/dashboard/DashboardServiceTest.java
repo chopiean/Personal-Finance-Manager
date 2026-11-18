@@ -57,21 +57,24 @@ class DashboardServiceTest {
         }
     }
 
+    private Transaction tx(long id, String description, double amount,
+                           LocalDate date, TransactionType type) {
+        return Transaction.builder().id(id).description(description).category(description)
+                .amount(amount).date(date).type(type)
+                .account(account).user(user).build();
+    }
+
     @Test
     void buildDashboard_computesTotalsForCurrentMonth() {
         when(currentUserService.getCurrentUser()).thenReturn(user);
         when(accountRepository.findByUserId(1L)).thenReturn(List.of(account));
 
-        YearMonth currentMonth = YearMonth.now();
-        LocalDate withinMonth = currentMonth.atDay(1).plusDays(1);
+        LocalDate withinMonth = YearMonth.now().atDay(1).plusDays(1);
+        Transaction income = tx(1L, "Salary", 1000, withinMonth, TransactionType.INCOME);
+        Transaction expense = tx(2L, "Rent", 400, withinMonth, TransactionType.EXPENSE);
 
-        Transaction income = Transaction.builder().id(1L).description("Salary").category("Salary")
-                .amount(1000).date(withinMonth).type(TransactionType.INCOME)
-                .account(account).user(user).build();
-        Transaction expense = Transaction.builder().id(2L).description("Rent").category("Rent")
-                .amount(400).date(withinMonth).type(TransactionType.EXPENSE)
-                .account(account).user(user).build();
-
+        when(transactionRepository.findByAccountUserId(1L))
+                .thenReturn(List.of(income, expense));
         when(transactionRepository.findByAccountUserIdAndDateBetween(eq(1L), any(), any()))
                 .thenReturn(List.of(income, expense));
         when(transactionRepository.findTop5ByAccountUserIdOrderByDateDesc(1L))
@@ -79,7 +82,7 @@ class DashboardServiceTest {
 
         DashboardResponse response = dashboardService.buildDashboard();
 
-        assertThat(response.getSummary().getTotalBalance()).isEqualTo(500);
+        assertThat(response.getSummary().getTotalBalance()).isEqualTo(1100); // 500 + 1000 - 400
         assertThat(response.getSummary().getIncome()).isEqualTo(1000);
         assertThat(response.getSummary().getExpenses()).isEqualTo(400);
         assertThat(response.getSummary().getSavingsRate()).isEqualTo(60.0);
@@ -87,9 +90,58 @@ class DashboardServiceTest {
     }
 
     @Test
+    void buildDashboard_totalBalanceIncludesEarlierMonths_butMonthlyTotalsDoNot() {
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(accountRepository.findByUserId(1L)).thenReturn(List.of(account));
+
+        LocalDate thisMonth = YearMonth.now().atDay(1).plusDays(1);
+        LocalDate lastMonth = YearMonth.now().minusMonths(1).atDay(10);
+        Transaction oldExpense = tx(1L, "Laptop", 300, lastMonth, TransactionType.EXPENSE);
+        Transaction newIncome = tx(2L, "Salary", 1000, thisMonth, TransactionType.INCOME);
+
+        when(transactionRepository.findByAccountUserId(1L))
+                .thenReturn(List.of(oldExpense, newIncome));
+        when(transactionRepository.findByAccountUserIdAndDateBetween(eq(1L), any(), any()))
+                .thenReturn(List.of(newIncome));
+        when(transactionRepository.findTop5ByAccountUserIdOrderByDateDesc(1L))
+                .thenReturn(List.of(newIncome, oldExpense));
+
+        DashboardResponse response = dashboardService.buildDashboard();
+
+        assertThat(response.getSummary().getTotalBalance()).isEqualTo(1200); // 500 - 300 + 1000
+        assertThat(response.getSummary().getIncome()).isEqualTo(1000);
+        assertThat(response.getSummary().getExpenses()).isEqualTo(0);
+    }
+
+    @Test
+    void buildDashboard_mapsRecentTransactionsToDto() {
+        when(currentUserService.getCurrentUser()).thenReturn(user);
+        when(accountRepository.findByUserId(1L)).thenReturn(List.of(account));
+
+        LocalDate date = YearMonth.now().atDay(2);
+        Transaction expense = tx(7L, "Groceries", 42.5, date, TransactionType.EXPENSE);
+
+        when(transactionRepository.findByAccountUserId(1L)).thenReturn(List.of(expense));
+        when(transactionRepository.findByAccountUserIdAndDateBetween(eq(1L), any(), any()))
+                .thenReturn(List.of(expense));
+        when(transactionRepository.findTop5ByAccountUserIdOrderByDateDesc(1L))
+                .thenReturn(List.of(expense));
+
+        DashboardResponse.RecentTransactionItem item =
+                dashboardService.buildDashboard().getRecentTransactions().get(0);
+
+        assertThat(item.getId()).isEqualTo(7L);
+        assertThat(item.getDescription()).isEqualTo("Groceries");
+        assertThat(item.getAmount()).isEqualTo(42.5);
+        assertThat(item.getDate()).isEqualTo(date.toString()); // yyyy-MM-dd
+        assertThat(item.getType()).isEqualTo(TransactionType.EXPENSE);
+    }
+
+    @Test
     void buildDashboard_savingsRateIsZero_whenNoIncome() {
         when(currentUserService.getCurrentUser()).thenReturn(user);
         when(accountRepository.findByUserId(1L)).thenReturn(List.of());
+        when(transactionRepository.findByAccountUserId(1L)).thenReturn(List.of());
         when(transactionRepository.findByAccountUserIdAndDateBetween(eq(1L), any(), any()))
                 .thenReturn(List.of());
         when(transactionRepository.findTop5ByAccountUserIdOrderByDateDesc(1L))

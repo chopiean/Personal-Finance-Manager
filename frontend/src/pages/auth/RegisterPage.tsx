@@ -4,7 +4,20 @@ import { useNavigate } from "react-router-dom";
 import AuthBackground from "./AuthBackground";
 import { useToast } from "../../components/feedback/useFeedback";
 import { IconLogo } from "../../components/Icons";
-import { validateEmail, validatePassword } from "../../utils/validation";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function validateEmail(email: string): string | null {
+  return EMAIL_RE.test(email.trim()) ? null : "Please enter a valid email address.";
+}
+
+function validatePassword(password: string): string | null {
+  if (password.length < 8) return "Password must be at least 8 characters.";
+  if (!/\d/.test(password)) return "Password must contain a number.";
+  if (!/[^A-Za-z0-9]/.test(password))
+    return "Password must contain a special character.";
+  return null;
+}
 
 const errorTextStyle = {
   color: "#dc2626",

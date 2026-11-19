@@ -121,19 +121,3 @@ describe("LoginPage", () => {
     expect(screen.getByText("Welcome Page")).toBeInTheDocument();
   });
 });
-
-describe("LoginPage forgot password link", () => {
-  it("links to the forgot password page", () => {
-    render(
-      <MemoryRouter initialEntries={["/login"]}>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-        </Routes>
-      </MemoryRouter>
-    );
-    expect(screen.getByRole("link", { name: "Forgot password?" })).toHaveAttribute(
-      "href",
-      "/forgot-password"
-    );
-  });
-});

@@ -3,8 +3,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
 import WelcomePage from "../pages/auth/WelcomePage";
-import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
-import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import AccountsPage from "../pages/accounts/AccountsPage";
@@ -24,8 +22,6 @@ export default function AppRouter() {
       <Route path="/" element={<WelcomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       {/* PROTECTED ROUTES */}
       <Route

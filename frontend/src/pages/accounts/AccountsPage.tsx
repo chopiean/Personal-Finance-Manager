@@ -82,7 +82,7 @@ export default function AccountsPage() {
       >
         Accounts
       </h1>
-      <p style={{ color: "#6b7280", marginBottom: 34, fontSize: 17 }}>
+      <p style={{ color: "var(--text-muted)", marginBottom: 34, fontSize: 17 }}>
         Manage the wallets and bank accounts used in your budget.
       </p>
 
@@ -99,11 +99,11 @@ export default function AccountsPage() {
         <div
           className="pfm-card"
           style={{
-            background: "white",
+            background: "var(--surface)",
             padding: "32px 28px",
             borderRadius: 20,
             boxShadow: "0 12px 32px rgba(0,0,0,0.08)",
-            border: "1px solid #eef0f2",
+            border: "1px solid var(--border)",
           }}
         >
           <h2
@@ -111,7 +111,7 @@ export default function AccountsPage() {
               fontSize: 20,
               marginBottom: 18,
               fontWeight: 600,
-              color: "#111",
+              color: "var(--text)",
             }}
           >
             Add New Account
@@ -133,7 +133,7 @@ export default function AccountsPage() {
                 style={{
                   padding: "12px 14px",
                   borderRadius: 12,
-                  border: "1px solid #d1d5db",
+                  border: "1px solid var(--border-strong)",
                   fontSize: 15,
                 }}
               />
@@ -150,7 +150,7 @@ export default function AccountsPage() {
                 style={{
                   padding: "12px 10px",
                   borderRadius: 12,
-                  border: "1px solid #d1d5db",
+                  border: "1px solid var(--border-strong)",
                   fontSize: 15,
                 }}
               >
@@ -173,7 +173,7 @@ export default function AccountsPage() {
                 style={{
                   padding: "12px 14px",
                   borderRadius: 12,
-                  border: "1px solid #d1d5db",
+                  border: "1px solid var(--border-strong)",
                   fontSize: 15,
                 }}
               />
@@ -181,6 +181,7 @@ export default function AccountsPage() {
 
             <button
               type="submit"
+              className="btn-shine"
               disabled={submitting}
               style={{
                 marginTop: 10,
@@ -205,11 +206,11 @@ export default function AccountsPage() {
         <div
           className="pfm-card table-scroll"
           style={{
-            background: "white",
+            background: "var(--surface)",
             padding: "32px 28px",
             borderRadius: 20,
             boxShadow: "0 12px 32px rgba(0,0,0,0.08)",
-            border: "1px solid #eef0f2",
+            border: "1px solid var(--border)",
             minHeight: 260,
           }}
         >
@@ -218,7 +219,7 @@ export default function AccountsPage() {
           </h2>
 
           {accounts.length === 0 ? (
-            <p style={{ color: "#9ca3af", marginTop: 6 }}>
+            <p style={{ color: "var(--text-faint)", marginTop: 6 }}>
               You have no accounts yet. Add one on the left.
             </p>
           ) : (
@@ -230,7 +231,7 @@ export default function AccountsPage() {
               }}
             >
               <thead>
-                <tr style={{ color: "#6b7280", textAlign: "left" }}>
+                <tr style={{ color: "var(--text-muted)", textAlign: "left" }}>
                   <th>Name</th>
                   <th>Currency</th>
                   <th>Balance</th>
@@ -243,7 +244,7 @@ export default function AccountsPage() {
                   <tr
                     key={a.id}
                     style={{
-                      background: "#fafafa",
+                      background: "var(--surface-2)",
                       borderRadius: 12,
                     }}
                   >

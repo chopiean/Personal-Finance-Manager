@@ -7,7 +7,7 @@ const CUSTOM = "__custom__";
 const fieldStyle = {
   padding: "12px 14px",
   borderRadius: 12,
-  border: "1px solid #d1d5db",
+  border: "1px solid var(--border-strong)",
   fontSize: 15,
 };
 

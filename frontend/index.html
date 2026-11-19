@@ -8,6 +8,19 @@
       href="https://cdn.dribbble.com/userupload/25928765/file/original-c8ce00e19c60302a55a8adf55501ebd8.png?resize=400x0"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t && window.matchMedia("(prefers-color-scheme: dark)").matches) t = "dark";
+        document.documentElement.dataset.theme = t === "dark" ? "dark" : "light";
+      } catch (e) {}
+    </script>
     <title>Personal Finance Manager</title>
   </head>
   <body>

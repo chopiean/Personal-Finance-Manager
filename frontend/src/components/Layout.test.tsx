@@ -87,3 +87,18 @@ describe("Layout", () => {
     expect(screen.getByText("Accounts Content")).toBeInTheDocument();
   });
 });
+
+describe("Layout brand link", () => {
+  it("goes back to the dashboard when the Finance title is clicked", async () => {
+    const user = userEvent.setup();
+    renderLayout("/accounts");
+    expect(screen.getByText("Accounts Content")).toBeInTheDocument();
+
+    const [sidebarBrand] = screen
+      .getAllByTitle("Go to dashboard")
+      .filter((el) => el.closest("#app-sidebar"));
+    await user.click(sidebarBrand);
+
+    expect(screen.getByText("Dashboard Content")).toBeInTheDocument();
+  });
+});

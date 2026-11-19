@@ -2,14 +2,35 @@ import { useState } from "react";
 import { Link, useNavigate, Outlet, useLocation } from "react-router-dom";
 import { apiFetch } from "../api/api";
 import ChatWidget from "./ChatWidget";
+import ThemeToggle from "./ThemeToggle";
+import { useConfirm, useToast } from "./feedback/useFeedback";
+import {
+  IconChart,
+  IconDashboard,
+  IconLogo,
+  IconLogout,
+  IconSwap,
+  IconTarget,
+  IconUpload,
+  IconWallet,
+} from "./Icons";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", path: "dashboard" },
-  { label: "Accounts", path: "/accounts" },
-  { label: "Transactions", path: "/transactions" },
-  { label: "Budgets", path: "/budgets" },
-  { label: "Reports", path: "/reports" },
-  { label: "Import / Export", path: "/csv-upload" },
+  { label: "Dashboard", path: "/dashboard", icon: IconDashboard },
+  { label: "Accounts", path: "/accounts", icon: IconWallet },
+  { label: "Transactions", path: "/transactions", icon: IconSwap },
+  { label: "Budgets", path: "/budgets", icon: IconTarget },
+  { label: "Reports", path: "/reports", icon: IconChart },
+  { label: "Import / Export", path: "/csv-upload", icon: IconUpload },
+];
+
+// Short labels for the phone tab bar (the rest stay in the drawer menu)
+const TAB_ITEMS = [
+  { ...NAV_ITEMS[0], short: "Home" },
+  { ...NAV_ITEMS[1], short: "Accounts" },
+  { ...NAV_ITEMS[2], short: "Activity" },
+  { ...NAV_ITEMS[3], short: "Budgets" },
+  { ...NAV_ITEMS[4], short: "Reports" },
 ];
 
 export default function Layout() {
@@ -18,17 +39,25 @@ export default function Layout() {
   const [deleting, setDeleting] = useState(false);
   // Only used on narrow screens, where the sidebar is a slide-in drawer.
   const [menuOpen, setMenuOpen] = useState(false);
+  const username = localStorage.getItem("username");
+  const confirm = useConfirm();
+  const toast = useToast();
 
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("username");
     nav("/");
   }
 
   async function deleteAccount() {
-    const confirmed = window.confirm(
-      "Are you sure to delete your account permanently?"
-    );
+    const confirmed = await confirm({
+      title: "Delete your account?",
+      message:
+        "Are you sure to delete your account permanently? All accounts, transactions and budgets will be removed.",
+      confirmLabel: "Delete forever",
+      danger: true,
+    });
     if (!confirmed) return;
 
     setDeleting(true);
@@ -36,9 +65,10 @@ export default function Layout() {
       await apiFetch("/auth/me", { method: "DELETE" });
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem("username");
       nav("/");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete account.");
+      toast(err instanceof Error ? err.message : "Failed to delete account.", "error");
     } finally {
       setDeleting(false);
     }
@@ -48,9 +78,7 @@ export default function Layout() {
     <div
       className="app-layout"
       style={{
-        background: "linear-gradient(120deg,#f5f7fb,#eef2ff)",
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif',
+        background: "var(--bg)",
       }}
     >
       {/* MOBILE TOP BAR (hidden on wide screens via CSS) */}
@@ -69,14 +97,19 @@ export default function Layout() {
             fontSize: 20,
             lineHeight: 1,
             cursor: "pointer",
-            color: "#0f172a",
+            color: "var(--text)",
           }}
         >
           ☰
         </button>
-        <span style={{ fontSize: 22, fontWeight: 700, color: "#0f172a" }}>
-          Finance
-        </span>
+        <Link to="/dashboard" className="brand-link" title="Go to dashboard">
+          <span className="brand-mark" aria-hidden="true" style={{ width: 32, height: 32 }}>
+            <IconLogo size={18} />
+          </span>
+          <span style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>
+            Finance
+          </span>
+        </Link>
       </header>
 
       {/* BACKDROP (mobile only, while the menu is open) */}
@@ -97,7 +130,7 @@ export default function Layout() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "rgba(255,255,255,0.9)",
+          background: "var(--glass)",
           backdropFilter: "blur(20px)",
           borderRight: "1px solid rgba(148,163,184,0.25)",
           boxShadow: "4px 0 18px rgba(15,23,42,0.06)",
@@ -109,20 +142,30 @@ export default function Layout() {
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              marginBottom: 24,
+              marginBottom: 32,
             }}
           >
-            <h1
-              style={{
-                fontSize: 32,
-                fontWeight: 700,
-                margin: 0,
-                color: "#0f172a",
-                letterSpacing: 0.2,
-              }}
+            <Link
+              to="/dashboard"
+              className="brand-link"
+              title="Go to dashboard"
+              onClick={() => setMenuOpen(false)}
             >
-              Finance
-            </h1>
+              <span className="brand-mark" aria-hidden="true">
+                <IconLogo size={22} />
+              </span>
+              <h1
+                style={{
+                  fontSize: 26,
+                  fontWeight: 800,
+                  margin: 0,
+                  color: "var(--text)",
+                  letterSpacing: "-0.5px",
+                }}
+              >
+                Finance
+              </h1>
+            </Link>
             <button
               type="button"
               className="sidebar-close"
@@ -134,7 +177,7 @@ export default function Layout() {
                 fontSize: 26,
                 lineHeight: 1,
                 cursor: "pointer",
-                color: "#475569",
+                color: "var(--text-muted)",
               }}
             >
               ×
@@ -145,42 +188,23 @@ export default function Layout() {
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: 8,
+              gap: 6,
             }}
           >
             {NAV_ITEMS.map((item) => {
-              const active =
-                item.path === "/"
-                  ? location.pathname === "/"
-                  : location.pathname.startsWith(item.path);
+              const active = location.pathname.startsWith(item.path);
+              const Icon = item.icon;
 
               return (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={() => setMenuOpen(false)}
-                  style={{
-                    padding: "10px 14px",
-                    borderRadius: 12,
-                    fontSize: 16,
-                    fontWeight: active ? 600 : 400,
-                    color: active ? "#0f172a" : "#475569",
-                    backgroundColor: active ? "#e5f2ff" : "transparent",
-                    border: active
-                      ? "1px solid rgba(59,130,246,0.25)"
-                      : "1px solid transparent",
-                    transition: "background-color 0.15s ease, transform 0.1s",
-                  }}
-                  onMouseEnter={(e) =>
-                    ((e.target as HTMLAnchorElement).style.backgroundColor =
-                      active ? "#e5f2ff" : "#f1f5f9")
-                  }
-                  onMouseLeave={(e) =>
-                    ((e.target as HTMLAnchorElement).style.backgroundColor =
-                      active ? "#e5f2ff" : "transparent")
-                  }
+                  className={active ? "nav-item active" : "nav-item"}
+                  aria-current={active ? "page" : undefined}
                 >
-                  {item.label}
+                  <Icon />
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
@@ -188,33 +212,74 @@ export default function Layout() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <ThemeToggle />
+          {username && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "10px 12px",
+                marginBottom: 6,
+                borderRadius: 16,
+                background: "var(--surface-2)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <div
+                aria-hidden="true"
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: "50%",
+                  display: "grid",
+                  placeItems: "center",
+                  fontWeight: 700,
+                  color: "white",
+                  background: "linear-gradient(135deg,#6366f1,#22c55e)",
+                }}
+              >
+                {username.charAt(0).toUpperCase()}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12, color: "var(--text-faint)" }}>Signed in as</div>
+                <div
+                  style={{
+                    fontWeight: 600,
+                    color: "var(--text)",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {username}
+                </div>
+              </div>
+            </div>
+          )}
+
           <button
             onClick={logout}
+            className="btn-shine"
             style={{
               width: "100%",
               padding: "12px 14px",
-              borderRadius: 999,
+              borderRadius: 14,
               border: "none",
               background:
                 "linear-gradient(135deg,rgba(248,113,113,1),rgba(239,68,68,1))",
               color: "white",
-              fontSize: 20,
+              fontSize: 16,
               fontWeight: 600,
               cursor: "pointer",
               boxShadow: "0 8px 18px rgba(248,113,113,0.35)",
-              transition: "transform 0.1s ease, box-shadow 0.1s ease",
-            }}
-            onMouseEnter={(e) => {
-              const btn = e.target as HTMLButtonElement;
-              btn.style.transform = "translateY(-1px)";
-              btn.style.boxShadow = "0 10px 22px rgba(248,113,113,0.42)";
-            }}
-            onMouseLeave={(e) => {
-              const btn = e.target as HTMLButtonElement;
-              btn.style.transform = "translateY(0)";
-              btn.style.boxShadow = "0 8px 18px rgba(248,113,113,0.35)";
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
             }}
           >
+            <IconLogout size={18} />
             Logout
           </button>
 
@@ -223,12 +288,12 @@ export default function Layout() {
             disabled={deleting}
             style={{
               width: "100%",
-              padding: "12px 14px",
-              borderRadius: 999,
-              border: "1px solid rgba(220,38,38,0.4)",
+              padding: "10px 14px",
+              borderRadius: 14,
+              border: "1px solid rgba(220,38,38,0.3)",
               background: "transparent",
               color: "#b91c1c",
-              fontSize: 18,
+              fontSize: 14,
               fontWeight: 600,
               cursor: deleting ? "not-allowed" : "pointer",
               opacity: deleting ? 0.6 : 1,
@@ -242,7 +307,7 @@ export default function Layout() {
       <main
         className="app-main"
         style={{
-          background: "linear-gradient(135deg,#f9fbff,#ffffff)",
+          background: "var(--bg-main)",
         }}
       >
         <div
@@ -251,9 +316,30 @@ export default function Layout() {
             margin: "0 auto",
           }}
         >
-          <Outlet />
+          <div key={location.pathname} className="page-transition">
+            <Outlet />
+          </div>
         </div>
       </main>
+      {/* MOBILE BOTTOM TABS (hidden on wide screens via CSS) */}
+      <nav className="bottom-tabs" aria-label="Quick navigation">
+        {TAB_ITEMS.map((item) => {
+          const active = location.pathname.startsWith(item.path);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              aria-label={item.label}
+              aria-current={active ? "page" : undefined}
+              data-label={item.short}
+              className={active ? "bottom-tab active" : "bottom-tab"}
+            >
+              <Icon size={22} />
+            </Link>
+          );
+        })}
+      </nav>
       <ChatWidget />
     </div>
   );

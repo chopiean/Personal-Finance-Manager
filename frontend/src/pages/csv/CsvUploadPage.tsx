@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../../api/api";
+import { IconUpload } from "../../components/Icons";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
@@ -9,9 +10,9 @@ type Account = {
 };
 
 /* ----------------------------------------------------
-   Shared Apple Glass Button Component
+   Secondary button
 ---------------------------------------------------- */
-function AppleGlassButton({
+function SecondaryButton({
   children,
   onClick,
   disabled,
@@ -20,39 +21,12 @@ function AppleGlassButton({
   onClick?: () => void;
   disabled?: boolean;
 }) {
-  const baseStyle: React.CSSProperties = {
-    padding: "14px 24px",
-    borderRadius: "14px",
-    background: "rgba(255, 255, 255, 0.25)",
-    backdropFilter: "blur(12px)",
-    WebkitBackdropFilter: "blur(12px)",
-    border: "1px solid rgba(255, 255, 255, 0.3)",
-    color: "#0f172a",
-    fontSize: 16,
-    fontWeight: 600,
-    cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.6 : 1,
-    boxShadow: "0 6px 15px rgba(0,0,0,0.08)",
-    transition: "all 0.2s ease",
-    width: "100%",
-    margin: "10px 0",
-  };
-
   return (
     <button
+      type="button"
       onClick={!disabled ? onClick : undefined}
       disabled={disabled}
-      style={baseStyle}
-      onMouseEnter={(e) =>
-        !disabled &&
-        ((e.target as HTMLButtonElement).style.background =
-          "rgba(255, 255, 255, 0.45)")
-      }
-      onMouseLeave={(e) =>
-        !disabled &&
-        ((e.target as HTMLButtonElement).style.background =
-          "rgba(255, 255, 255, 0.25)")
-      }
+      className="csv-secondary-btn"
     >
       {children}
     </button>
@@ -68,6 +42,16 @@ export default function CsvUploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [dragging, setDragging] = useState(false);
+
+  const pickFile = (f: File | null) => {
+    if (f && !f.name.toLowerCase().endsWith(".csv")) {
+      setMessage("Please choose a .csv file.");
+      return;
+    }
+    setFile(f);
+    setMessage("");
+  };
 
   /* Load accounts with authentication */
   useEffect(() => {
@@ -168,67 +152,129 @@ export default function CsvUploadPage() {
       >
         Import / Export
       </h1>
-      <p style={{ color: "#6b7280", marginBottom: 28, fontSize: 16 }}>
+      <p style={{ color: "var(--text-muted)", marginBottom: 28, fontSize: 16 }}>
         Export your transactions or import them from a CSV file.
       </p>
 
-      {/* Export Button */}
-      <AppleGlassButton onClick={handleExport}>
-        ⬇️ Export All Transactions
-      </AppleGlassButton>
+      {/* Export */}
+      <div className="pfm-card csv-card">
+        <div className="csv-card-icon" style={{ background: "rgba(99,102,241,0.12)", color: "#6366f1" }}>
+          <IconDownload />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h2 className="csv-card-title">Export</h2>
+          <p className="csv-card-text">Download every transaction as a CSV file.</p>
+        </div>
+        <SecondaryButton onClick={handleExport}>Export All Transactions</SecondaryButton>
+      </div>
 
-      {/* Account Selector */}
-      <label style={{ display: "block", marginTop: 20, marginBottom: 8 }}>
-        Select Account:
-      </label>
+      {/* Import */}
+      <div className="pfm-card csv-card" style={{ flexDirection: "column", alignItems: "stretch" }}>
+        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+          <div className="csv-card-icon" style={{ background: "rgba(22,163,74,0.12)", color: "#16a34a" }}>
+            <IconUpload />
+          </div>
+          <div>
+            <h2 className="csv-card-title">Import</h2>
+            <p className="csv-card-text">Add transactions from a CSV file into one account.</p>
+          </div>
+        </div>
 
-      <select
-        style={{
-          padding: "12px 14px",
-          borderRadius: 12,
-          border: "1px solid #cbd5e1",
-          marginBottom: 20,
-          fontSize: 15,
-          width: "100%",
-        }}
-        value={selectedAccount ?? ""}
-        onChange={(e) => setSelectedAccount(Number(e.target.value))}
-      >
-        <option value="" disabled>
-          -- Choose an account --
-        </option>
-        {accounts.map((acc) => (
-          <option key={acc.id} value={acc.id}>
-            {acc.name}
-          </option>
-        ))}
-      </select>
-
-      {/* File Input */}
-      <input
-        type="file"
-        accept=".csv"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
-        style={{ margin: "20px 0", display: "block", maxWidth: "100%" }}
-      />
-
-      {/* Import Button */}
-      <AppleGlassButton onClick={handleUpload} disabled={loading}>
-        {loading ? "Uploading…" : "Upload CSV"}
-      </AppleGlassButton>
-
-      {/* Message */}
-      {message && (
-        <p
+        <label htmlFor="csv-account" className="field-label" style={{ display: "block", marginTop: 8 }}>
+          Select Account:
+        </label>
+        <select
+          id="csv-account"
+          className="select"
           style={{
-            marginTop: 20,
-            color: message.startsWith("Error") ? "red" : "green",
-            fontWeight: 500,
+            padding: "12px 14px",
+            borderRadius: 12,
+            border: "1px solid var(--border-strong)",
+            fontSize: 15,
+            width: "100%",
+          }}
+          value={selectedAccount ?? ""}
+          onChange={(e) => setSelectedAccount(Number(e.target.value))}
+        >
+          <option value="" disabled>
+            -- Choose an account --
+          </option>
+          {accounts.map((acc) => (
+            <option key={acc.id} value={acc.id}>
+              {acc.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Drop zone (the real file input sits inside, visually hidden) */}
+        <label
+          className={`dropzone${dragging ? " dragging" : ""}${file ? " has-file" : ""}`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            const dropped = e.dataTransfer.files?.[0];
+            if (dropped) pickFile(dropped);
           }}
         >
-          {message}
-        </p>
-      )}
+          <input
+            type="file"
+            accept=".csv"
+            className="sr-only"
+            onChange={(e) => pickFile(e.target.files?.[0] || null)}
+          />
+          <span className="dropzone-icon" aria-hidden="true">
+            {file ? "📄" : "☁️"}
+          </span>
+          {file ? (
+            <>
+              <strong className="dropzone-title">{file.name}</strong>
+              <span className="dropzone-hint">{(file.size / 1024).toFixed(1)} KB · click to change</span>
+            </>
+          ) : (
+            <>
+              <strong className="dropzone-title">Drag & drop your CSV here</strong>
+              <span className="dropzone-hint">or click to browse</span>
+            </>
+          )}
+        </label>
+
+        <button
+          type="button"
+          className="btn-shine csv-upload-btn"
+          onClick={handleUpload}
+          disabled={loading}
+        >
+          {loading && <span className="spinner" aria-hidden="true" />}
+          {loading ? "Uploading…" : "Upload CSV"}
+        </button>
+        {loading && <div className="upload-progress" aria-hidden="true" />}
+
+        {message && (
+          <p
+            key={message}
+            role="status"
+            className={message === "CSV uploaded successfully!" ? "csv-message ok" : "csv-message"}
+          >
+            <span aria-hidden="true">{message === "CSV uploaded successfully!" ? "✓" : "!"}</span>
+            {message}
+          </p>
+        )}
+      </div>
     </section>
+  );
+}
+
+function IconDownload() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M5 21h14" />
+    </svg>
   );
 }

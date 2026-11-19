@@ -219,3 +219,61 @@ describe("TransactionsPage", () => {
     expect(await screen.findByText("No transactions yet.")).toBeInTheDocument();
   });
 });
+
+describe("TransactionsPage search and filters", () => {
+  const mixed: TransactionResponse[] = [
+    ...transactions,
+    {
+      id: 2,
+      description: "Salary",
+      amount: 2000,
+      date: "2026-09-02",
+      type: "INCOME",
+      accountId: 1,
+      accountName: "Cash",
+    },
+  ];
+
+  beforeEach(() => {
+    vi.mocked(apiFetch).mockReset();
+  });
+
+  it("groups transactions under a heading per day", async () => {
+    mockApi({ transactions: mixed, accounts });
+    render(<TransactionsPage />);
+
+    expect(await screen.findByText(/\b1 September/)).toBeInTheDocument();
+    expect(screen.getByText(/\b2 September/)).toBeInTheDocument();
+  });
+
+  it("filters by type with the chips", async () => {
+    mockApi({ transactions: mixed, accounts });
+    const user = userEvent.setup();
+    render(<TransactionsPage />);
+    await screen.findByRole("cell", { name: "Salary" });
+
+    await user.click(screen.getByRole("button", { name: "Income" }));
+    expect(screen.getByRole("cell", { name: "Salary" })).toBeInTheDocument();
+    expect(screen.queryByRole("cell", { name: "Groceries" })).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Expenses" }));
+    expect(screen.getByRole("cell", { name: "Groceries" })).toBeInTheDocument();
+    expect(screen.queryByRole("cell", { name: "Salary" })).toBeNull();
+  });
+
+  it("filters by search text and shows a no-match message", async () => {
+    mockApi({ transactions: mixed, accounts });
+    const user = userEvent.setup();
+    render(<TransactionsPage />);
+    await screen.findByRole("cell", { name: "Salary" });
+
+    const search = screen.getByRole("searchbox", { name: "Search transactions" });
+    await user.type(search, "groc");
+    expect(screen.getByRole("cell", { name: "Groceries" })).toBeInTheDocument();
+    expect(screen.queryByRole("cell", { name: "Salary" })).toBeNull();
+
+    await user.clear(search);
+    await user.type(search, "zzz");
+    expect(screen.getByText("No matching transactions.")).toBeInTheDocument();
+  });
+});

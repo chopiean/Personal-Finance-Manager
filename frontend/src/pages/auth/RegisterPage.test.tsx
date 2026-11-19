@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import RegisterPage from "./RegisterPage";
 import { apiFetch } from "../../api/api";
+import FeedbackProvider from "../../components/feedback/FeedbackProvider";
 
 vi.mock("../../api/api", () => ({
   apiFetch: vi.fn(),
@@ -11,6 +12,7 @@ vi.mock("../../api/api", () => ({
 
 function renderRegister() {
   return render(
+    <FeedbackProvider>
     <MemoryRouter initialEntries={["/register"]}>
       <Routes>
         <Route path="/register" element={<RegisterPage />} />
@@ -18,6 +20,7 @@ function renderRegister() {
         <Route path="/" element={<div>Welcome Page</div>} />
       </Routes>
     </MemoryRouter>
+    </FeedbackProvider>
   );
 }
 
@@ -70,12 +73,12 @@ describe("RegisterPage", () => {
       }),
     });
 
-    expect(window.alert).toHaveBeenCalledWith("Registration successfil");
     expect(await screen.findByText("Login Page")).toBeInTheDocument();
+    expect(screen.getByText("Account created! Please log in.")).toBeInTheDocument();
     expect(localStorage.getItem("token")).toBeNull();
   });
 
-  it("shows an alert with the error message when registration fails", async () => {
+  it("shows an error toast when registration fails", async () => {
     vi.mocked(apiFetch).mockRejectedValue(new Error("Username taken"));
     const user = userEvent.setup();
 
@@ -95,9 +98,9 @@ describe("RegisterPage", () => {
     expect(
       await screen.findByRole("button", { name: "Register" })
     ).toBeEnabled();
-    expect(window.alert).toHaveBeenCalledWith(
-      "Registration failed. Username taken"
-    );
+    expect(
+      await screen.findByText("Registration failed. Username taken")
+    ).toBeInTheDocument();
   });
 
   it("navigates to /login when the login link is clicked", async () => {

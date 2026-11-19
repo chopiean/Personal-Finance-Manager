@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import type { MonthlySummaryResponse, BudgetStatus } from "../../api/type";
 import DeleteButton from "../../components/DeleteButton";
+import Skeleton from "../../components/Skeleton";
 
 export default function BudgetsPage() {
   const [budgets, setBudgets] = useState<BudgetStatus[]>([]);
@@ -56,7 +57,7 @@ export default function BudgetsPage() {
       >
         Budgets
       </h1>
-      <p style={{ color: "#6b7280", marginBottom: 28, fontSize: 16 }}>
+      <p style={{ color: "var(--text-muted)", marginBottom: 28, fontSize: 16 }}>
         See how your spending compares to your monthly limits.
       </p>
 
@@ -64,17 +65,42 @@ export default function BudgetsPage() {
       <div
         className="pfm-card"
         style={{
-          background: "white",
+          background: "var(--surface)",
           padding: "28px 26px 24px",
           borderRadius: 20,
           boxShadow: "0 12px 32px rgba(0,0,0,0.08)",
-          border: "1px solid #eef0f2",
+          border: "1px solid var(--border)",
         }}
       >
         {loading ? (
-          <p style={{ color: "#9ca3af" }}>Loading budgets…</p>
+          <div
+            className="responsive-grid"
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}
+          >
+            <span className="sr-only">Loading budgets…</span>
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                style={{
+                  padding: 18,
+                  borderRadius: 18,
+                  border: "1px solid var(--border)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <Skeleton width="40%" height={16} />
+                  <Skeleton width={70} height={20} radius={999} />
+                </div>
+                <Skeleton width="70%" height={12} />
+                <Skeleton height={10} radius={999} />
+              </div>
+            ))}
+          </div>
         ) : budgets.length === 0 ? (
-          <p style={{ color: "#9ca3af" }}>
+          <p style={{ color: "var(--text-faint)" }}>
             No budgets configured for this month. Create budgets in the backend
             to see them here.
           </p>
@@ -87,22 +113,31 @@ export default function BudgetsPage() {
               gap: 20,
             }}
           >
-            {budgets.map((b) => {
+            {budgets.map((b, i) => {
               const spent = b.actualExpense;
               const limit = b.budgetLimit;
               const percent =
                 limit > 0 ? Math.min(100, (spent / limit) * 100) : 0;
 
               const over = b.overBudget;
+              const ratio = limit > 0 ? (spent / limit) * 100 : 0;
+              const level = over || ratio >= 100 ? "danger" : ratio >= 75 ? "warn" : "ok";
+              const fill = {
+                ok: "linear-gradient(90deg,#4ade80,#16a34a)",
+                warn: "linear-gradient(90deg,#fcd34d,#f59e0b)",
+                danger: "linear-gradient(90deg,#f87171,#dc2626)",
+              }[level];
 
               return (
                 <div
                   key={b.budgetId}
+                  className="budget-tile"
                   style={{
+                    animationDelay: `${i * 0.07}s`,
                     padding: "18px 18px 16px",
                     borderRadius: 18,
-                    background: "#fafafa",
-                    border: "1px solid #e5e7eb",
+                    background: "var(--surface-2)",
+                    border: "1px solid var(--border)",
                     display: "flex",
                     flexDirection: "column",
                     gap: 8,
@@ -120,7 +155,7 @@ export default function BudgetsPage() {
                       style={{
                         fontWeight: 600,
                         fontSize: 15,
-                        color: "#111827",
+                        color: "var(--text)",
                       }}
                     >
                       {b.category}
@@ -145,7 +180,7 @@ export default function BudgetsPage() {
                       display: "flex",
                       justifyContent: "space-between",
                       fontSize: 13,
-                      color: "#6b7280",
+                      color: "var(--text-muted)",
                     }}
                   >
                     <span>Limit: €{limit.toFixed(2)}</span>
@@ -154,25 +189,28 @@ export default function BudgetsPage() {
 
                   {/* Progress bar */}
                   <div
+                    className="budget-bar"
+                    role="progressbar"
+                    aria-label={`${b.category} budget used`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(percent)}
+                    style={{ marginTop: 6 }}
+                  >
+                    <AnimatedFill
+                      percent={percent}
+                      background={fill}
+                      danger={level === "danger"}
+                    />
+                  </div>
+                  <div
                     style={{
-                      marginTop: 6,
-                      height: 8,
-                      borderRadius: 999,
-                      background: "#e5e7eb",
-                      overflow: "hidden",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: level === "ok" ? "#16a34a" : level === "warn" ? "#d97706" : "#dc2626",
                     }}
                   >
-                    <div
-                      style={{
-                        width: `${percent}%`,
-                        height: "100%",
-                        borderRadius: 999,
-                        transition: "width 0.3s ease",
-                        background: over
-                          ? "linear-gradient(90deg,#f97373,#ef4444)"
-                          : "linear-gradient(90deg,#4ade80,#22c55e)",
-                      }}
-                    />
+                    {Math.round(ratio)}% used
                   </div>
 
                   {/* Remaining */}
@@ -222,5 +260,29 @@ export default function BudgetsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Starts at 0 and grows to its width after mount, so the bar animates in. */
+function AnimatedFill({
+  percent,
+  background,
+  danger,
+}: {
+  percent: number;
+  background: string;
+  danger: boolean;
+}) {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setWidth(percent));
+    return () => cancelAnimationFrame(id);
+  }, [percent]);
+
+  return (
+    <div
+      className={danger ? "budget-bar-fill danger" : "budget-bar-fill"}
+      style={{ width: `${width}%`, background }}
+    />
   );
 }

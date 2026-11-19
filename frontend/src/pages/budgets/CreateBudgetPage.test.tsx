@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import CreateBudgetPage from "./CreateBudgetPage";
 import { apiFetch } from "../../api/api";
+import FeedbackProvider from "../../components/feedback/FeedbackProvider";
 import type { AccountResponse } from "../../api/type";
 
 vi.mock("../../api/api", () => ({
@@ -16,12 +17,14 @@ const accounts: AccountResponse[] = [
 
 function renderPage() {
   return render(
+    <FeedbackProvider>
     <MemoryRouter initialEntries={["/budgets/new"]}>
       <Routes>
         <Route path="/budgets/new" element={<CreateBudgetPage />} />
         <Route path="/budgets" element={<div>Budgets Page</div>} />
       </Routes>
     </MemoryRouter>
+    </FeedbackProvider>
   );
 }
 
@@ -80,8 +83,8 @@ describe("CreateBudgetPage", () => {
       })
     );
 
-    expect(window.alert).toHaveBeenCalledWith("Budget created!");
     expect(await screen.findByText("Budgets Page")).toBeInTheDocument();
+    expect(screen.getByText("Budget created!")).toBeInTheDocument();
   });
 
   it("allows a custom category", async () => {

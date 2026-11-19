@@ -80,7 +80,7 @@ describe("AppRouter", () => {
     localStorage.setItem("token", "abc123");
     renderAt("/dashboard");
 
-    expect(await screen.findByText("Welcome back 👋")).toBeInTheDocument();
+    expect(await screen.findByText(/Good (morning|afternoon|evening)/)).toBeInTheDocument();
     // Layout sidebar should be visible
     expect(screen.getByRole("heading", { name: "Finance" })).toBeInTheDocument();
   });
@@ -98,7 +98,7 @@ describe("AppRouter", () => {
     localStorage.setItem("token", "abc123");
     renderAt("/home");
 
-    expect(await screen.findByText("Welcome back 👋")).toBeInTheDocument();
+    expect(await screen.findByText(/Good (morning|afternoon|evening)/)).toBeInTheDocument();
   });
 
   it("redirects unknown routes to /", () => {

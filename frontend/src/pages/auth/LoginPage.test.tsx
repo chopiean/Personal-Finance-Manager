@@ -66,6 +66,23 @@ describe("LoginPage", () => {
     expect(localStorage.getItem("username")).toBe("jane");
   });
 
+  it("stores the registered username when logging in with an email", async () => {
+    vi.mocked(apiFetch).mockResolvedValue({ token: "jwt-token", username: "jane" });
+    const user = userEvent.setup();
+
+    renderLogin();
+
+    await user.type(
+      screen.getByPlaceholderText("Username or email address"),
+      "jane@example.com"
+    );
+    await user.type(screen.getByPlaceholderText("Password"), "secret");
+    await user.click(screen.getByRole("button", { name: "Login" }));
+
+    expect(await screen.findByText("Dashboard Page")).toBeInTheDocument();
+    expect(localStorage.getItem("username")).toBe("jane");
+  });
+
   it("shows an alert with the error message when login fails", async () => {
     vi.mocked(apiFetch).mockRejectedValue(new Error("Invalid credentials"));
     const user = userEvent.setup();

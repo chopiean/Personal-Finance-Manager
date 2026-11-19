@@ -1,4 +1,12 @@
 import { useNavigate } from "react-router-dom";
+import AuthBackground from "./AuthBackground";
+import { IconChart, IconLogo, IconTarget, IconWallet } from "../../components/Icons";
+
+const FEATURES = [
+  { icon: IconWallet, label: "Accounts" },
+  { icon: IconTarget, label: "Budgets" },
+  { icon: IconChart, label: "Insights" },
+];
 
 export default function WelcomePage() {
   const nav = useNavigate();
@@ -13,30 +21,32 @@ export default function WelcomePage() {
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        background: "linear-gradient(145deg, #f9fafb, #eef1f4)",
         padding: 20,
       }}
     >
+      <AuthBackground />
+
       <div
         className="auth-card"
         style={{
           width: "100%",
-          maxWidth: 500,
-          padding: "60px 40px",
-          background: "white",
-          boxShadow: "0 20px 45px rgba(0,0,0,0.08)",
-          border: "1px solid #e5e7eb",
+          maxWidth: 480,
+          padding: "52px 40px 44px",
           textAlign: "center",
         }}
       >
+        <div className="auth-logo" aria-hidden="true">
+          <IconLogo size={28} />
+        </div>
+
         <h1
           className="pfm-title"
           style={{
             fontSize: 34,
-            fontWeight: 700,
+            fontWeight: 800,
             marginBottom: 12,
-            color: "#111827",
-            letterSpacing: "-0.5px",
+            letterSpacing: "-0.8px",
+            lineHeight: 1.15,
           }}
         >
           Personal Finance Manager
@@ -45,67 +55,78 @@ export default function WelcomePage() {
         <p
           style={{
             fontSize: 15,
-            color: "#6b7280",
-            marginBottom: 36,
-            lineHeight: "22px",
+            color: "var(--text-muted)",
+            marginBottom: 28,
+            lineHeight: "23px",
           }}
         >
           Your personal finance manager — track budgets, accounts, and
           transactions effortlessly.
         </p>
 
-        {/* Login Button */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 10,
+            flexWrap: "wrap",
+            marginBottom: 32,
+          }}
+        >
+          {FEATURES.map(({ icon: Icon, label }, i) => (
+            <span
+              key={label}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "7px 12px",
+                borderRadius: 999,
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#4338ca",
+                background: "rgba(99,102,241,0.08)",
+                border: "1px solid rgba(99,102,241,0.15)",
+                animation: `pop-in 0.5s var(--ease-spring) ${0.35 + i * 0.1}s backwards`,
+              }}
+            >
+              <Icon size={15} />
+              {label}
+            </span>
+          ))}
+        </div>
+
         <button
           onClick={() => nav("/login")}
+          className="btn-shine auth-btn"
           style={{
             width: "100%",
-            padding: "14px",
-            background: "white",
-            border: "1px solid #d1d5db",
-            color: "#374151",
+            padding: "15px",
+            background: "linear-gradient(135deg, #22c55e, #16a34a)",
+            border: "none",
+            color: "white",
             fontSize: 16,
             fontWeight: 600,
             cursor: "pointer",
-            marginBottom: 18,
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "#3eba56";
-            e.currentTarget.style.borderColor = "#cfd2d6";
-            e.currentTarget.style.color = "white";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "white";
-            e.currentTarget.style.borderColor = "#d1d5db";
-            e.currentTarget.style.color = "#374151";
+            marginBottom: 12,
+            boxShadow: "0 12px 26px rgba(22,163,74,0.3)",
           }}
         >
           Login
         </button>
 
-        {/* Register Button */}
         <button
           onClick={() => nav("/register")}
+          className="auth-btn"
           style={{
             width: "100%",
-            padding: "14px",
-            background: "white",
-            border: "1px solid #d1d5db",
-            color: "#374151",
+            padding: "15px",
+            background: "var(--surface)",
+            border: "1px solid var(--border-strong)",
+            color: "var(--text)",
             fontSize: 16,
             fontWeight: 600,
             cursor: "pointer",
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "#3eba56";
-            e.currentTarget.style.borderColor = "#cfd2d6";
-            e.currentTarget.style.color = "white";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "white";
-            e.currentTarget.style.borderColor = "#d1d5db";
-            e.currentTarget.style.color = "#374151";
           }}
         >
           Register

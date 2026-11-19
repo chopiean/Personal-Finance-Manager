@@ -6,9 +6,11 @@ import { useNavigate } from "react-router-dom";
 import type { AccountResponse } from "../../api/type";
 import CategorySelect from "../../components/CategorySelect";
 import { EXPENSE_CATEGORIES } from "../../constants/categories";
+import { useToast } from "../../components/feedback/useFeedback";
 
 export default function CreateBudgetPage() {
   const nav = useNavigate();
+  const toast = useToast();
   const [accounts, setAccounts] = useState<AccountResponse[]>([]);
 
   const [form, setForm] = useState({
@@ -49,7 +51,7 @@ export default function CreateBudgetPage() {
       body: JSON.stringify(payload),
     });
 
-    alert("Budget created!");
+    toast("Budget created!", "success");
     nav("/budgets");
   }
 
@@ -75,7 +77,7 @@ export default function CreateBudgetPage() {
         Create Budget
       </h1>
 
-      <p style={{ color: "#6b7280", marginBottom: 28, fontSize: 16 }}>
+      <p style={{ color: "var(--text-muted)", marginBottom: 28, fontSize: 16 }}>
         Set a monthly spending limit for a category.
       </p>
 
@@ -83,11 +85,11 @@ export default function CreateBudgetPage() {
       <div
         className="pfm-card"
         style={{
-          background: "white",
+          background: "var(--surface)",
           padding: "32px 28px",
           borderRadius: 20,
           boxShadow: "0 12px 32px rgba(0,0,0,0.08)",
-          border: "1px solid #eef0f2",
+          border: "1px solid var(--border)",
         }}
       >
         <form
@@ -119,7 +121,7 @@ export default function CreateBudgetPage() {
               style={{
                 padding: "12px 14px",
                 borderRadius: 12,
-                border: "1px solid #d1d5db",
+                border: "1px solid var(--border-strong)",
                 fontSize: 15,
               }}
             />
@@ -139,7 +141,7 @@ export default function CreateBudgetPage() {
               style={{
                 padding: "12px 14px",
                 borderRadius: 12,
-                border: "1px solid #d1d5db",
+                border: "1px solid var(--border-strong)",
                 fontSize: 15,
               }}
             />
@@ -157,7 +159,7 @@ export default function CreateBudgetPage() {
               style={{
                 padding: "12px 14px",
                 borderRadius: 12,
-                border: "1px solid #d1d5db",
+                border: "1px solid var(--border-strong)",
                 fontSize: 15,
               }}
             />
@@ -174,7 +176,7 @@ export default function CreateBudgetPage() {
               style={{
                 padding: "12px 14px",
                 borderRadius: 12,
-                border: "1px solid #d1d5db",
+                border: "1px solid var(--border-strong)",
                 fontSize: 15,
               }}
             >
@@ -190,6 +192,7 @@ export default function CreateBudgetPage() {
           {/* Submit button */}
           <button
             type="submit"
+            className="btn-shine"
             style={{
               marginTop: 10,
               background: "linear-gradient(135deg, #4f46e5, #635bff)",

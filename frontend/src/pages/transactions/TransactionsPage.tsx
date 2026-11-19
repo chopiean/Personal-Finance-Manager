@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { Fragment, useEffect, useMemo, useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
 import type {
   AccountResponse,
@@ -32,6 +32,29 @@ export default function TransactionsPage() {
   }));
   const [budgetCategories, setBudgetCategories] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"ALL" | "INCOME" | "EXPENSE">("ALL");
+
+  // Search + type filter, then group by calendar day (newest first)
+  const groups = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const visible = transactions.filter(
+      (t) =>
+        (filter === "ALL" || t.type === filter) &&
+        (!q ||
+          t.description.toLowerCase().includes(q) ||
+          (t.category ?? "").toLowerCase().includes(q) ||
+          String(t.accountName ?? "").toLowerCase().includes(q))
+    );
+    const byDay = new Map<string, TransactionResponse[]>();
+    [...visible]
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .forEach((t) => {
+        const day = t.date.slice(0, 10);
+        byDay.set(day, [...(byDay.get(day) ?? []), t]);
+      });
+    return [...byDay.entries()];
+  }, [transactions, query, filter]);
 
   useEffect(() => {
     const load = async () => {
@@ -127,7 +150,7 @@ export default function TransactionsPage() {
       >
         Transactions
       </h1>
-      <p style={{ color: "#6b7280", marginBottom: 34, fontSize: 16 }}>
+      <p style={{ color: "var(--text-muted)", marginBottom: 34, fontSize: 16 }}>
         Quickly log your income and expenses.
       </p>
 
@@ -144,11 +167,11 @@ export default function TransactionsPage() {
         <div
           className="pfm-card"
           style={{
-            background: "white",
+            background: "var(--surface)",
             padding: "32px 28px",
             borderRadius: 20,
             boxShadow: "0 12px 32px rgba(0,0,0,0.08)",
-            border: "1px solid #eef0f2",
+            border: "1px solid var(--border)",
           }}
         >
           <h2
@@ -156,7 +179,7 @@ export default function TransactionsPage() {
               fontSize: 20,
               marginBottom: 16,
               fontWeight: 600,
-              color: "#111",
+              color: "var(--text)",
             }}
           >
             New Transaction
@@ -182,7 +205,7 @@ export default function TransactionsPage() {
                 style={{
                   padding: "12px 14px",
                   borderRadius: 12,
-                  border: "1px solid #d1d5db",
+                  border: "1px solid var(--border-strong)",
                   fontSize: 15,
                 }}
               />
@@ -200,7 +223,7 @@ export default function TransactionsPage() {
                 style={{
                   padding: "12px 14px",
                   borderRadius: 12,
-                  border: "1px solid #d1d5db",
+                  border: "1px solid var(--border-strong)",
                   fontSize: 15,
                 }}
               />
@@ -218,7 +241,7 @@ export default function TransactionsPage() {
                 style={{
                   padding: "12px 14px",
                   borderRadius: 12,
-                  border: "1px solid #d1d5db",
+                  border: "1px solid var(--border-strong)",
                   fontSize: 15,
                 }}
               />
@@ -235,7 +258,7 @@ export default function TransactionsPage() {
                 style={{
                   padding: "12px 14px",
                   borderRadius: 12,
-                  border: "1px solid #d1d5db",
+                  border: "1px solid var(--border-strong)",
                   fontSize: 15,
                 }}
               >
@@ -255,7 +278,7 @@ export default function TransactionsPage() {
                 style={{
                   padding: "12px 14px",
                   borderRadius: 12,
-                  border: "1px solid #d1d5db",
+                  border: "1px solid var(--border-strong)",
                   fontSize: 15,
                 }}
               >
@@ -282,7 +305,7 @@ export default function TransactionsPage() {
 
             {/* Submit Button */}
             <button
-              className="btn"
+              className="btn btn-shine"
               type="submit"
               disabled={submitting}
               style={{
@@ -307,11 +330,11 @@ export default function TransactionsPage() {
         <div
           className="pfm-card"
           style={{
-            background: "white",
+            background: "var(--surface)",
             padding: "32px 14px",
             borderRadius: 20,
             boxShadow: "0 12px 32px rgba(0,0,0,0.08)",
-            border: "1px solid #eef0f2",
+            border: "1px solid var(--border)",
           }}
         >
           <h2
@@ -324,10 +347,45 @@ export default function TransactionsPage() {
             Recent Transactions
           </h2>
 
+          {transactions.length > 0 && (
+            <div className="tx-toolbar">
+              <input
+                type="search"
+                className="input"
+                aria-label="Search transactions"
+                placeholder="Search transactions…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <div className="chip-group" role="group" aria-label="Filter by type">
+                {(["ALL", "INCOME", "EXPENSE"] as const).map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    aria-pressed={filter === f}
+                    className={filter === f ? "filter-chip active" : "filter-chip"}
+                    onClick={() => setFilter(f)}
+                  >
+                    {f === "ALL" ? "All" : f === "INCOME" ? "Income" : "Expenses"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="table-scroll">
             {transactions.length === 0 ? (
-              <p style={{ color: "#9ca3af", marginTop: 8 }}>
-                No transactions yet.
+              <div style={{ textAlign: "center", padding: "28px 0" }}>
+                <div aria-hidden="true" style={{ fontSize: 34, animation: "float 4s ease-in-out infinite" }}>
+                  💸
+                </div>
+                <p style={{ color: "var(--text-faint)", marginTop: 8 }}>
+                  No transactions yet.
+                </p>
+              </div>
+            ) : groups.length === 0 ? (
+              <p style={{ color: "var(--text-faint)", marginTop: 8, textAlign: "center" }}>
+                No matching transactions.
               </p>
             ) : (
               <table
@@ -338,7 +396,7 @@ export default function TransactionsPage() {
                 }}
               >
                 <thead>
-                  <tr style={{ color: "#6b7280", textAlign: "left" }}>
+                  <tr style={{ color: "var(--text-muted)", textAlign: "left" }}>
                     <th>Date</th>
                     <th>Description</th>
                     <th>Account</th>
@@ -349,11 +407,21 @@ export default function TransactionsPage() {
                 </thead>
 
                 <tbody>
-                  {transactions.map((t) => (
+                  {groups.map(([day, items]) => (
+                    <Fragment key={day}>
+                    <tr className="group-row">
+                      <td colSpan={6}>
+                        <span>{dayLabel(day)}</span>
+                        <span className="group-total">
+                          {formatNet(items)}
+                        </span>
+                      </td>
+                    </tr>
+                  {items.map((t) => (
                     <tr
                       key={t.id}
                       style={{
-                        background: "#fafafa",
+                        background: "var(--surface-2)",
                         borderRadius: 12,
                       }}
                     >
@@ -377,7 +445,14 @@ export default function TransactionsPage() {
                         </span>
                       </td>
 
-                      <td style={{ textAlign: "right", fontWeight: 600 }}>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          fontWeight: 700,
+                          fontVariantNumeric: "tabular-nums",
+                          color: t.type === "EXPENSE" ? "#dc2626" : "#16a34a",
+                        }}
+                      >
                         {t.type === "EXPENSE" ? "-" : "+"}€{t.amount.toFixed(2)}
                       </td>
 
@@ -398,6 +473,8 @@ export default function TransactionsPage() {
                       </td>
                     </tr>
                   ))}
+                    </Fragment>
+                  ))}
                 </tbody>
               </table>
             )}
@@ -406,4 +483,27 @@ export default function TransactionsPage() {
       </div>
     </div>
   );
+}
+
+function dayLabel(day: string) {
+  const d = new Date(`${day}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((today.getTime() - d.getTime()) / 86_400_000);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  return d.toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: d.getFullYear() === today.getFullYear() ? undefined : "numeric",
+  });
+}
+
+function formatNet(items: TransactionResponse[]) {
+  const net = items.reduce(
+    (sum, t) => sum + (t.type === "EXPENSE" ? -t.amount : t.amount),
+    0
+  );
+  return `Net ${net < 0 ? "−" : "+"}€${Math.abs(net).toFixed(2)}`;
 }

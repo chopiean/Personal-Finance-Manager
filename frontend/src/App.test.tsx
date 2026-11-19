@@ -46,6 +46,6 @@ describe("App", () => {
     localStorage.setItem("token", "abc123");
     renderAt("/dashboard");
 
-    expect(await screen.findByText("Welcome back 👋")).toBeInTheDocument();
+    expect(await screen.findByText(/Good (morning|afternoon|evening)/)).toBeInTheDocument();
   });
 });

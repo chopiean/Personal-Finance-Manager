@@ -63,7 +63,29 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("fake-jwt-token"));
+                .andExpect(jsonPath("$.token").value("fake-jwt-token"))
+                .andExpect(jsonPath("$.username").value("jdoe"));
+    }
+
+    @Test
+    void login_withEmail_returnsRegisteredUsername() throws Exception {
+        LoginRequest req = new LoginRequest();
+        req.setIdentifier("jdoe@example.com");
+        req.setPassword("pw");
+
+        // The user details service resolves the email to the stored user,
+        // whose principal name is the registered username.
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                User.withUsername("jdoe").password("pw").roles("USER").build(), "pw");
+
+        when(authenticationManager.authenticate(any())).thenReturn(auth);
+        when(jwtService.generateToken(any())).thenReturn("fake-jwt-token");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("jdoe"));
     }
 
     @Test

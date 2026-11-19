@@ -16,14 +16,27 @@ describe("DashboardPage", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders default values before data has loaded", () => {
+  it("shows skeleton placeholders before data has loaded", () => {
     vi.mocked(apiFetch).mockReturnValue(new Promise(() => {}));
 
     render(<DashboardPage />);
 
     expect(screen.getByText("Total Balance")).toBeInTheDocument();
+    expect(screen.getByText("Loading dashboard…")).toBeInTheDocument();
+    expect(screen.queryByText("€0.00")).toBeNull();
+    expect(screen.queryByText("No recent transactions.")).toBeNull();
+  });
+
+  it("shows the empty state when there are no transactions", async () => {
+    vi.mocked(apiFetch).mockResolvedValue({
+      summary: { totalBalance: 0, income: 0, expenses: 0, savingsRate: 0 },
+      recentTransactions: [],
+    });
+
+    render(<DashboardPage />);
+
+    expect(await screen.findByText("No recent transactions.")).toBeInTheDocument();
     expect(screen.getByText("€0.00")).toBeInTheDocument();
-    expect(screen.getByText("No recent transactions.")).toBeInTheDocument();
   });
 
   it("renders the fetched summary and recent transactions", async () => {

@@ -1,6 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
 import { useNavigate } from "react-router-dom";
+import AuthBackground from "./AuthBackground";
+import { useToast } from "../../components/feedback/useFeedback";
+import { IconLogo } from "../../components/Icons";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -29,6 +32,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPass] = useState("");
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
@@ -51,7 +55,7 @@ export default function RegisterPage() {
       });
       localStorage.removeItem("token");
 
-      alert("Registration successfil");
+      toast("Account created! Please log in.", "success");
       nav("/login");
     } catch (err) {
       let message =
@@ -65,7 +69,7 @@ export default function RegisterPage() {
       } catch {
         /* plain-text error, keep as is */
       }
-      alert("Registration failed. " + message);
+      toast("Registration failed. " + message, "error");
     } finally {
       setLoading(false);
     }
@@ -81,10 +85,10 @@ export default function RegisterPage() {
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        background: "linear-gradient(145deg, #f9fafb, #eef1f4)",
         padding: 20,
       }}
     >
+      <AuthBackground />
       {/* Register Card */}
       <div
         className="auth-card"
@@ -92,31 +96,33 @@ export default function RegisterPage() {
           width: "100%",
           maxWidth: 500,
           padding: "48px 36px",
-          background: "white",
-          boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
-          border: "1px solid #ececec",
           textAlign: "center",
         }}
       >
+        <div className="auth-logo" aria-hidden="true">
+          <IconLogo size={28} />
+        </div>
+
         <h2
           style={{
             fontSize: 26,
             fontWeight: 700,
             marginBottom: 10,
-            color: "#111827",
+            color: "var(--text)",
             letterSpacing: "-0.5px",
           }}
         >
           Create an Account
         </h2>
 
-        <p style={{ color: "#6b7280", marginBottom: 30, fontSize: 14 }}>
+        <p style={{ color: "var(--text-muted)", marginBottom: 30, fontSize: 14 }}>
           Start managing your finances smarter.
         </p>
 
         <form onSubmit={handleRegister} noValidate>
-          {/* Email Input */}
+          {/* Username Input */}
           <input
+            className="auth-input"
             placeholder="Choose username"
             value={username}
             onChange={(e) => setUser(e.target.value)}
@@ -124,18 +130,13 @@ export default function RegisterPage() {
             style={{
               width: "100%",
               padding: "14px 16px",
-              border: "1px solid #d1d5db",
+              border: "1px solid var(--border-strong)",
               marginBottom: 14,
               fontSize: 15,
-              outline: "none",
-              transition: "0.2s",
             }}
-            onFocus={(e) =>
-              (e.target.style.borderColor = "rgba(34,197,94,0.7)")
-            }
-            onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
           />
           <input
+            className="auth-input"
             placeholder="Email address"
             type="email"
             value={email}
@@ -148,18 +149,10 @@ export default function RegisterPage() {
             style={{
               width: "100%",
               padding: "14px 16px",
-              border: `1px solid ${emailError ? "#dc2626" : "#d1d5db"}`,
+              border: "1px solid var(--border-strong)",
               marginBottom: 14,
               fontSize: 15,
-              outline: "none",
-              transition: "0.2s",
             }}
-            onFocus={(e) =>
-              (e.target.style.borderColor = "rgba(34,197,94,0.7)")
-            }
-            onBlur={(e) =>
-              (e.target.style.borderColor = emailError ? "#dc2626" : "#d1d5db")
-            }
           />
           {emailError && (
             <p role="alert" style={errorTextStyle}>
@@ -169,6 +162,7 @@ export default function RegisterPage() {
 
           {/* Password Input */}
           <input
+            className="auth-input"
             placeholder="Create password"
             type="password"
             value={password}
@@ -181,18 +175,10 @@ export default function RegisterPage() {
             style={{
               width: "100%",
               padding: "14px 16px",
-              border: `1px solid ${passwordError ? "#dc2626" : "#d1d5db"}`,
+              border: "1px solid var(--border-strong)",
               marginBottom: 14,
               fontSize: 15,
-              outline: "none",
-              transition: "0.2s",
             }}
-            onFocus={(e) =>
-              (e.target.style.borderColor = "rgba(34,197,94,0.7)")
-            }
-            onBlur={(e) =>
-              (e.target.style.borderColor = passwordError ? "#dc2626" : "#d1d5db")
-            }
           />
           {passwordError ? (
             <p role="alert" style={errorTextStyle}>
@@ -202,7 +188,7 @@ export default function RegisterPage() {
             <p
               style={{
                 ...errorTextStyle,
-                color: "#6b7280",
+                color: "var(--text-muted)",
               }}
             >
               At least 8 characters, including a number and a special character.
@@ -214,6 +200,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
+            className="btn-shine auth-btn"
             style={{
               width: "100%",
               padding: "14px",
@@ -223,15 +210,8 @@ export default function RegisterPage() {
               fontWeight: 600,
               cursor: "pointer",
               border: "none",
-              boxShadow: "0 5px 15px rgba(22,163,74,0.25)",
-              transition: "0.2s",
+              boxShadow: "0 12px 26px rgba(22,163,74,0.3)",
             }}
-            onMouseEnter={(e) =>
-              ((e.target as HTMLButtonElement).style.opacity = "0.9")
-            }
-            onMouseLeave={(e) =>
-              ((e.target as HTMLButtonElement).style.opacity = "1")
-            }
           >
             {loading ? "Registering…" : "Register"}
           </button>
@@ -243,25 +223,19 @@ export default function RegisterPage() {
         style={{
           marginTop: 24,
           fontSize: 15,
-          color: "#6b7280",
+          color: "var(--text-muted)",
           textAlign: "center",
         }}
       >
         Already have an account?{" "}
         <span
+          className="auth-link"
           onClick={() => nav("/login")}
           style={{
             color: "#0ea5e9",
             cursor: "pointer",
             fontWeight: 600,
-            transition: "0.2s",
           }}
-          onMouseEnter={(e) =>
-            ((e.target as HTMLSpanElement).style.opacity = "0.8")
-          }
-          onMouseLeave={(e) =>
-            ((e.target as HTMLSpanElement).style.opacity = "1")
-          }
         >
           Login
         </span>
@@ -272,8 +246,8 @@ export default function RegisterPage() {
           background: "transparent",
           marginTop: "20px",
           border: "none",
-          color: "black",
-          fontSize: 18,
+          color: "var(--text-muted)",
+          fontSize: 16,
           cursor: "pointer",
           fontWeight: 500,
         }}

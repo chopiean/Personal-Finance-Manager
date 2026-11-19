@@ -111,7 +111,18 @@ export default function ChatWidget() {
           zIndex: 1000,
         }}
       >
-        {open ? "×" : "💬"}
+        <span className={open ? "fab-icon open" : "fab-icon"} aria-hidden="true">
+          {open ? (
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          ) : (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" />
+              <path d="M12 8.5v.01M8.5 12h.01M15.5 12h.01" strokeWidth="3" />
+            </svg>
+          )}
+        </span>
       </button>
 
       {/* Chat panel */}
@@ -131,26 +142,35 @@ export default function ChatWidget() {
             maxHeight: "calc(100vh - 140px)",
             display: "flex",
             flexDirection: "column",
-            background: "rgba(255,255,255,0.97)",
+            background: "var(--glass)",
             backdropFilter: "blur(20px)",
             borderRadius: 20,
             border: "1px solid rgba(148,163,184,0.25)",
             boxShadow: "0 20px 50px rgba(15,23,42,0.18)",
             overflow: "hidden",
             zIndex: 1000,
-            fontFamily:
-              '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif',
           }}
         >
           {/* Header */}
           <div
-            style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9" }}
+            style={{
+              padding: "16px 20px",
+              borderBottom: "1px solid var(--border)",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+            }}
           >
-            <div style={{ fontWeight: 700, fontSize: 17, color: "#0f172a" }}>
-              AI Finance Assistant
+            <div className="chat-avatar" aria-hidden="true">
+              ✨<span className="chat-online" />
             </div>
-            <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>
-              Ask about your spending, budgets and balances
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 17, color: "var(--text)" }}>
+                AI Finance Assistant
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 2 }}>
+                Ask about your spending, budgets and balances
+              </div>
             </div>
           </div>
 
@@ -158,23 +178,25 @@ export default function ChatWidget() {
           <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
             {messages.length === 0 && (
               <div>
-                <p style={{ color: "#64748b", fontSize: 14, marginBottom: 12 }}>
+                <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 12 }}>
                   Try asking:
                 </p>
-                {SUGGESTIONS.map((s) => (
+                {SUGGESTIONS.map((s, i) => (
                   <button
                     key={s}
                     onClick={() => send(s)}
+                    className="chat-suggestion"
                     style={{
+                      animationDelay: `${0.1 + i * 0.06}s`,
                       display: "block",
                       width: "100%",
                       textAlign: "left",
                       padding: "10px 14px",
                       marginBottom: 8,
                       borderRadius: 12,
-                      border: "1px solid #e2e8f0",
-                      background: "#f8fafc",
-                      color: "#334155",
+                      border: "1px solid var(--border-strong)",
+                      background: "var(--surface-2)",
+                      color: "var(--text)",
                       fontSize: 14,
                       cursor: "pointer",
                     }}
@@ -191,7 +213,15 @@ export default function ChatWidget() {
               </Bubble>
             ))}
 
-            {loading && <Bubble role="assistant">Thinking…</Bubble>}
+            {loading && (
+              <Bubble role="assistant">
+                <span className="typing" aria-label="Thinking…" role="status">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+              </Bubble>
+            )}
 
             {error && (
               <p
@@ -210,7 +240,7 @@ export default function ChatWidget() {
               display: "flex",
               gap: 8,
               padding: 12,
-              borderTop: "1px solid #f1f5f9",
+              borderTop: "1px solid var(--border)",
             }}
           >
             <textarea
@@ -226,7 +256,9 @@ export default function ChatWidget() {
                 resize: "none",
                 padding: "10px 14px",
                 borderRadius: 12,
-                border: "1px solid #e2e8f0",
+                border: "1px solid var(--border-strong)",
+                background: "var(--surface-2)",
+                color: "var(--text)",
                 fontSize: 14,
                 fontFamily: "inherit",
                 outline: "none",
@@ -265,6 +297,7 @@ function Bubble({
   const isUser = role === "user";
   return (
     <div
+      className={isUser ? "chat-bubble from-user" : "chat-bubble from-assistant"}
       style={{
         display: "flex",
         justifyContent: isUser ? "flex-end" : "flex-start",
@@ -278,8 +311,8 @@ function Bubble({
           borderRadius: 16,
           borderBottomRightRadius: isUser ? 4 : 16,
           borderBottomLeftRadius: isUser ? 16 : 4,
-          background: isUser ? "#3b82f6" : "#f1f5f9",
-          color: isUser ? "white" : "#0f172a",
+          background: isUser ? "linear-gradient(135deg,#3b82f6,#6366f1)" : "var(--surface-3)",
+          color: isUser ? "white" : "var(--text)",
           fontSize: 14,
           lineHeight: 1.5,
           whiteSpace: "pre-wrap",

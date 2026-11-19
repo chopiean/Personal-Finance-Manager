@@ -1199,3 +1199,9 @@ a:focus-visible {
     animation: none;
   }
 }
+
+/* Cards holding form fields stay still: moving a form while someone types
+   is distracting, and a transformed ancestor can misplace native dropdowns. */
+.pfm-card:has(input, select, textarea):hover {
+  transform: none !important;
+}

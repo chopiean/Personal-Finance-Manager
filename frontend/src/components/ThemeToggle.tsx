@@ -1,8 +1,9 @@
 import { useTheme } from "../utils/useTheme";
 
+/** Switches between the light (Mint Fresh) and dark (Midnight Gold) looks. */
 export default function ThemeToggle() {
   const { theme, toggle } = useTheme();
-  const dark = theme === "dark";
+  const dark = theme === "midnight";
 
   return (
     <button

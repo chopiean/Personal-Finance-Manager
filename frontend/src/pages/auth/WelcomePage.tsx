@@ -84,9 +84,9 @@ export default function WelcomePage() {
                 borderRadius: 999,
                 fontSize: 13,
                 fontWeight: 600,
-                color: "#4338ca",
-                background: "rgba(99,102,241,0.08)",
-                border: "1px solid rgba(99,102,241,0.15)",
+                color: "var(--accent-strong)",
+                background: "color-mix(in srgb, var(--accent) 10%, transparent)",
+                border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
                 animation: `pop-in 0.5s var(--ease-spring) ${0.35 + i * 0.1}s backwards`,
               }}
             >
@@ -102,14 +102,14 @@ export default function WelcomePage() {
           style={{
             width: "100%",
             padding: "15px",
-            background: "linear-gradient(135deg, #22c55e, #16a34a)",
+            background: "var(--primary-gradient)",
             border: "none",
-            color: "white",
+            color: "var(--on-primary)",
             fontSize: 16,
             fontWeight: 600,
             cursor: "pointer",
             marginBottom: 12,
-            boxShadow: "0 12px 26px rgba(22,163,74,0.3)",
+            boxShadow: "0 12px 26px var(--primary-shadow)",
           }}
         >
           Login

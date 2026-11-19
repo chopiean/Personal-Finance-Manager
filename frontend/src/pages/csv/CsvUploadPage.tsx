@@ -158,7 +158,7 @@ export default function CsvUploadPage() {
 
       {/* Export */}
       <div className="pfm-card csv-card">
-        <div className="csv-card-icon" style={{ background: "rgba(99,102,241,0.12)", color: "#6366f1" }}>
+        <div className="csv-card-icon" style={{ background: "color-mix(in srgb, var(--accent) 14%, transparent)", color: "var(--accent)" }}>
           <IconDownload />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>

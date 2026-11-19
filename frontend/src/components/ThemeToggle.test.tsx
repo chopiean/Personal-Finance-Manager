@@ -15,20 +15,30 @@ describe("ThemeToggle", () => {
 
     const toggle = screen.getByRole("switch", { name: "Dark mode" });
     expect(toggle).toHaveAttribute("aria-checked", "false");
-    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(toggle).toHaveTextContent("Light mode");
+    expect(document.documentElement.dataset.theme).toBe("mint");
 
     await user.click(toggle);
     expect(toggle).toHaveAttribute("aria-checked", "true");
-    expect(document.documentElement.dataset.theme).toBe("dark");
-    expect(localStorage.getItem("theme")).toBe("dark");
+    expect(toggle).toHaveTextContent("Dark mode");
+    expect(document.documentElement.dataset.theme).toBe("midnight");
+    expect(localStorage.getItem("theme")).toBe("midnight");
+
+    await user.click(toggle);
+    expect(document.documentElement.dataset.theme).toBe("mint");
   });
 
-  it("starts from the saved theme", () => {
-    localStorage.setItem("theme", "dark");
+  it.each([
+    ["midnight", "true"],
+    ["dark", "true"],
+    ["light", "false"],
+    ["mint", "false"],
+  ])("starts from a saved %s choice", (saved, checked) => {
+    localStorage.setItem("theme", saved);
     render(<ThemeToggle />);
     expect(screen.getByRole("switch", { name: "Dark mode" })).toHaveAttribute(
       "aria-checked",
-      "true"
+      checked
     );
   });
 });

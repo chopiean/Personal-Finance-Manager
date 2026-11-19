@@ -123,13 +123,13 @@ export default function LoginPage() {
             style={{
               width: "100%",
               padding: "14px",
-              background: "linear-gradient(135deg, #22c55e, #16a34a)",
-              color: "white",
+              background: "var(--primary-gradient)",
+              color: "var(--on-primary)",
               fontSize: 16,
               fontWeight: 600,
               cursor: "pointer",
               border: "none",
-              boxShadow: "0 12px 26px rgba(22,163,74,0.3)",
+              boxShadow: "0 12px 26px var(--primary-shadow)",
             }}
           >
             {loading ? "Logging in…" : "Login"}
@@ -150,7 +150,7 @@ export default function LoginPage() {
           className="auth-link"
           onClick={() => nav("/register")}
           style={{
-            color: "#0ea5e9",
+            color: "var(--link)",
             cursor: "pointer",
             fontWeight: 600,
           }}

@@ -17,8 +17,10 @@
     <script>
       try {
         var t = localStorage.getItem("theme");
-        if (!t && window.matchMedia("(prefers-color-scheme: dark)").matches) t = "dark";
-        document.documentElement.dataset.theme = t === "dark" ? "dark" : "light";
+        if (t === "light") t = "mint";
+        if (t === "dark") t = "midnight";
+        if (!t && window.matchMedia("(prefers-color-scheme: dark)").matches) t = "midnight";
+        document.documentElement.dataset.theme = t === "midnight" ? "midnight" : "mint";
       } catch (e) {}
     </script>
     <title>Personal Finance Manager</title>

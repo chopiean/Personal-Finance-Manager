@@ -1,8 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
 
-export type Theme = "light" | "dark";
+export const THEMES = [
+  { id: "mint", label: "Mint Fresh", dark: false },
+  { id: "midnight", label: "Midnight Gold", dark: true },
+] as const;
+
+export type Theme = (typeof THEMES)[number]["id"];
 
 const KEY = "theme";
+
+// Themes that used to exist map onto their replacements
+const LEGACY: Record<string, Theme> = { light: "mint", dark: "midnight" };
+
+export function isTheme(value: unknown): value is Theme {
+  return THEMES.some((t) => t.id === value);
+}
 
 function initialTheme(): Theme {
   const stored = (() => {
@@ -12,42 +24,45 @@ function initialTheme(): Theme {
       return null;
     }
   })();
-  if (stored === "light" || stored === "dark") return stored;
+  if (isTheme(stored)) return stored;
+  if (stored && LEGACY[stored]) return LEGACY[stored];
   if (typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches) {
-    return "dark";
+    return "midnight";
   }
-  return "light";
+  return "mint";
 }
 
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>(initialTheme);
+  const [theme, setThemeState] = useState<Theme>(initialTheme);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
-  const toggle = useCallback(() => {
+  const setTheme = useCallback((next: Theme) => {
     const root = document.documentElement;
     root.classList.add("theme-transition");
     window.setTimeout(() => root.classList.remove("theme-transition"), 400);
-
-    setTheme((t) => {
-      const next: Theme = t === "dark" ? "light" : "dark";
-      try {
-        localStorage.setItem(KEY, next);
-      } catch {
-        /* storage unavailable: theme still applies for this session */
-      }
-      return next;
-    });
+    try {
+      localStorage.setItem(KEY, next);
+    } catch {
+      /* storage unavailable: theme still applies for this session */
+    }
+    setThemeState(next);
   }, []);
 
-  return { theme, toggle };
+  const toggle = useCallback(
+    () => setTheme(theme === "midnight" ? "mint" : "midnight"),
+    [theme, setTheme]
+  );
+
+  return { theme, setTheme, toggle };
 }
 
-/** True while the dark theme is active; follows toggles anywhere in the app. */
-const readDark = () => document.documentElement.dataset.theme === "dark";
+/** True while a dark theme (Dark or Midnight Gold) is active; follows changes anywhere. */
+const readDark = () =>
+  THEMES.some((t) => t.dark && t.id === document.documentElement.dataset.theme);
 
 export function useIsDark() {
   const [dark, setDark] = useState(readDark);

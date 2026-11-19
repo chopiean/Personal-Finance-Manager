@@ -244,15 +244,15 @@ export default function BudgetsPage() {
           <button
             onClick={() => navigate("/budgets/new")}
             style={{
-              background: "linear-gradient(135deg, #4f46e5, #635bff)",
-              color: "white",
+              background: "var(--accent-gradient)",
+              color: "var(--on-accent)",
               border: "none",
               padding: "10px 18px",
               borderRadius: 999,
               fontSize: 14,
               fontWeight: 600,
               cursor: "pointer",
-              boxShadow: "0 6px 16px rgba(99,90,255,0.25)",
+              boxShadow: "0 6px 16px var(--accent-shadow)",
             }}
           >
             Add Budget

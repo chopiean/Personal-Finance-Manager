@@ -309,15 +309,15 @@ export default function TransactionsPage() {
               type="submit"
               disabled={submitting}
               style={{
-                background: "linear-gradient(135deg, #4f46e5, #635bff)",
+                background: "var(--accent-gradient)",
                 padding: "14px",
                 border: "none",
-                color: "white",
+                color: "var(--on-accent)",
                 borderRadius: 14,
                 fontSize: 16,
                 fontWeight: 600,
                 cursor: "pointer",
-                boxShadow: "0 6px 16px rgba(99,90,255,0.3)",
+                boxShadow: "0 6px 16px var(--accent-shadow)",
                 marginTop: 6,
               }}
             >

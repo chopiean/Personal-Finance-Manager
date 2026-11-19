@@ -108,7 +108,7 @@ export default function DashboardPage() {
           amount={summary?.totalBalance ?? 0}
           format={(v) => `€${v.toFixed(2)}`}
           icon={IconWallet}
-          tint="#6366f1"
+          tint="var(--accent)"
           loading={loading}
         />
 
@@ -286,7 +286,7 @@ function DashboardCard({
           boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
           border: "1px solid var(--border)",
           animation: `pop-in 0.6s var(--ease-out) ${0.1 + index * 0.08}s backwards`,
-          "--glow": `${tint}14`,
+          "--glow": `color-mix(in srgb, ${tint} 8%, transparent)`,
         } as CSSProperties
       }
     >
@@ -301,7 +301,7 @@ function DashboardCard({
         <p style={{ color: "var(--text-muted)", fontSize: 14, fontWeight: 500 }}>{title}</p>
         <span
           className="stat-icon"
-          style={{ background: `${tint}1a`, color: tint }}
+          style={{ background: `color-mix(in srgb, ${tint} 10%, transparent)`, color: tint }}
         >
           <Icon size={20} />
         </span>

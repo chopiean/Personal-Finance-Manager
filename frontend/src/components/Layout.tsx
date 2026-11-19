@@ -235,8 +235,8 @@ export default function Layout() {
                   display: "grid",
                   placeItems: "center",
                   fontWeight: 700,
-                  color: "white",
-                  background: "linear-gradient(135deg,#6366f1,#22c55e)",
+                  color: "var(--on-primary)",
+                  background: "var(--brand-gradient)",
                 }}
               >
                 {username.charAt(0).toUpperCase()}

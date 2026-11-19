@@ -195,15 +195,15 @@ export default function CreateBudgetPage() {
             className="btn-shine"
             style={{
               marginTop: 10,
-              background: "linear-gradient(135deg, #4f46e5, #635bff)",
-              color: "white",
+              background: "var(--accent-gradient)",
+              color: "var(--on-accent)",
               border: "none",
               padding: "14px",
               borderRadius: 14,
               fontSize: 16,
               fontWeight: 600,
               cursor: "pointer",
-              boxShadow: "0 6px 16px rgba(99,90,255,0.35)",
+              boxShadow: "0 6px 16px var(--accent-shadow)",
             }}
           >
             Create Budget

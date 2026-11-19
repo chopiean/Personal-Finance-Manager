@@ -112,9 +112,9 @@
 }
 
 @media (max-width: 768px) {
+  /* Top of the screen, below the mobile top bar, clear of the tab bar and chat button */
   .toast-stack {
-    top: auto;
-    bottom: 90px;
+    top: 68px;
     left: 16px;
     right: 16px;
     width: auto;

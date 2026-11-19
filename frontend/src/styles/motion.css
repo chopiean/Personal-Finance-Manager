@@ -1173,3 +1173,29 @@ a:focus-visible {
 .brand-link:active {
   transform: scale(0.97);
 }
+
+/* ---------- Touch screens ----------
+   On phones :hover "sticks" after a tap, leaving cards lifted or rows
+   shifted. Keep colour feedback but drop hover movement there. */
+@media (hover: none) {
+  .pfm-card:hover,
+  .tx-row:hover,
+  .nav-item:hover,
+  .budget-tile:hover,
+  .chat-suggestion:hover,
+  .month-arrow:hover,
+  .chat-fab:hover,
+  .btn-shine:not(:disabled):hover,
+  .stat-card:hover .stat-icon,
+  .brand-link:hover .brand-mark {
+    transform: none !important;
+  }
+
+  .stat-card:hover::before {
+    transform: none;
+  }
+
+  .btn-shine:not(:disabled):hover::after {
+    animation: none;
+  }
+}

@@ -83,6 +83,24 @@ describe("LoginPage", () => {
     expect(localStorage.getItem("username")).toBe("jane");
   });
 
+  it("tells the user the server is waking up when login is slow", async () => {
+    let finish!: (v: { token: string; username: string }) => void;
+    vi.mocked(apiFetch).mockReturnValue(new Promise((r) => (finish = r)));
+    const user = userEvent.setup();
+
+    renderLogin();
+    await user.type(screen.getByPlaceholderText("Username or email address"), "jane");
+    await user.type(screen.getByPlaceholderText("Password"), "secret");
+    await user.click(screen.getByRole("button", { name: "Login" }));
+
+    expect(
+      await screen.findByText(/Waking up the server/, {}, { timeout: 4000 })
+    ).toBeInTheDocument();
+
+    finish({ token: "jwt-token", username: "jane" });
+    expect(await screen.findByText("Dashboard Page")).toBeInTheDocument();
+  });
+
   it("shows an alert with the error message when login fails", async () => {
     vi.mocked(apiFetch).mockRejectedValue(new Error("Invalid credentials"));
     const user = userEvent.setup();

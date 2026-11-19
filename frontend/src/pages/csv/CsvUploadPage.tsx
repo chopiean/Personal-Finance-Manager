@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { apiFetch } from "../../api/api";
 import { IconUpload } from "../../components/Icons";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+import { API_BASE } from "../../api/config";
 
 type Account = {
   id: number;

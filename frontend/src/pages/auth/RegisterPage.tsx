@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import AuthBackground from "./AuthBackground";
+import { warmUpBackend } from "../../api/warmUp";
 import { useToast } from "../../components/feedback/useFeedback";
 import { IconLogo } from "../../components/Icons";
 
@@ -32,6 +33,11 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPass] = useState("");
   const [loading, setLoading] = useState(false);
+  // Shown when the server is slow to answer (e.g. waking from sleep)
+  const [slow, setSlow] = useState(false);
+
+  // Start waking the backend while the user types
+  useEffect(warmUpBackend, []);
   const toast = useToast();
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -46,6 +52,7 @@ export default function RegisterPage() {
     if (emailErr || passwordErr) return;
 
     setLoading(true);
+    const slowTimer = window.setTimeout(() => setSlow(true), 3000);
 
     try {
       await apiFetch("/auth/register", {
@@ -71,6 +78,8 @@ export default function RegisterPage() {
       }
       toast("Registration failed. " + message, "error");
     } finally {
+      window.clearTimeout(slowTimer);
+      setSlow(false);
       setLoading(false);
     }
   }
@@ -215,6 +224,12 @@ export default function RegisterPage() {
           >
             {loading ? "Registering…" : "Register"}
           </button>
+          {slow && (
+            <p className="slow-hint" role="status">
+              <span className="slow-spinner" aria-hidden="true" />
+              Waking up the server… the first sign-in after a while can take up to a minute.
+            </p>
+          )}
         </form>
       </div>
 

@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import AuthBackground from "./AuthBackground";
+import { warmUpBackend } from "../../api/warmUp";
 import { useToast } from "../../components/feedback/useFeedback";
 import { IconLogo } from "../../components/Icons";
 
@@ -16,11 +17,17 @@ export default function LoginPage() {
   const [username, setUser] = useState("");
   const [password, setPass] = useState("");
   const [loading, setLoading] = useState(false);
+  // Shown when the server is slow to answer (e.g. waking from sleep)
+  const [slow, setSlow] = useState(false);
+
+  // Start waking the backend while the user types
+  useEffect(warmUpBackend, []);
   const toast = useToast();
 
   async function handleLogin(e?: FormEvent) {
     if (e) e.preventDefault();
     setLoading(true);
+    const slowTimer = window.setTimeout(() => setSlow(true), 3000);
 
     try {
       const { token, username: registeredName } = await apiFetch<AuthResponse>("/auth/login", {
@@ -37,6 +44,8 @@ export default function LoginPage() {
         err instanceof Error ? err.message : "Unknown login error";
       toast("Login failed: " + message, "error");
     } finally {
+      window.clearTimeout(slowTimer);
+      setSlow(false);
       setLoading(false);
     }
   }
@@ -134,6 +143,12 @@ export default function LoginPage() {
           >
             {loading ? "Logging in…" : "Login"}
           </button>
+          {slow && (
+            <p className="slow-hint" role="status">
+              <span className="slow-spinner" aria-hidden="true" />
+              Waking up the server… the first sign-in after a while can take up to a minute.
+            </p>
+          )}
         </form>
       </div>
 

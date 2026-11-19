@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { warmUpBackend } from "../../api/warmUp";
 import AuthBackground from "./AuthBackground";
 import { IconChart, IconLogo, IconTarget, IconWallet } from "../../components/Icons";
 
@@ -10,6 +12,9 @@ const FEATURES = [
 
 export default function WelcomePage() {
   const nav = useNavigate();
+
+  // Start waking the backend while the user decides
+  useEffect(warmUpBackend, []);
 
   return (
     <div

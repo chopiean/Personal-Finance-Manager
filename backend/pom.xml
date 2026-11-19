@@ -26,6 +26,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Email (password reset links) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Web / REST -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

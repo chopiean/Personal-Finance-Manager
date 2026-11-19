@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { apiFetch } from "../../api/api";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthBackground from "./AuthBackground";
 import { useToast } from "../../components/feedback/useFeedback";
 import { IconLogo } from "../../components/Icons";
@@ -111,10 +111,20 @@ export default function LoginPage() {
               width: "100%",
               padding: "14px 16px",
               border: "1px solid var(--border-strong)",
-              marginBottom: 22,
+              marginBottom: 10,
               fontSize: 15,
             }}
           />
+
+          <div style={{ textAlign: "right", marginBottom: 20 }}>
+            <Link
+              to="/forgot-password"
+              className="auth-link"
+              style={{ fontSize: 14, fontWeight: 600, color: "#6366f1" }}
+            >
+              Forgot password?
+            </Link>
+          </div>
 
           <button
             type="submit"

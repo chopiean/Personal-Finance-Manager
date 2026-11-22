@@ -116,6 +116,33 @@ describe("BudgetsPage", () => {
     expect(screen.getByText("Entertainment")).toBeInTheDocument();
   });
 
+  it("lists this month's expenses in the category when a budget is clicked", async () => {
+    const now = new Date();
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const txs = [
+      { id: 1, description: "Lidl", amount: 42.5, date: `${thisMonth}-03`, type: "EXPENSE", accountId: 1, category: "groceries " },
+      { id: 2, description: "Cinema", amount: 12, date: `${thisMonth}-04`, type: "EXPENSE", accountId: 1, category: "Entertainment" },
+      { id: 3, description: "Old shop", amount: 9, date: "2000-01-01", type: "EXPENSE", accountId: 1, category: "Groceries" },
+    ];
+    vi.mocked(apiFetch).mockImplementation(async (path: string) =>
+      (path.startsWith("/reports") ? summary : txs) as never
+    );
+    const user = userEvent.setup();
+
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "Show Groceries transactions" }));
+
+    const list = await screen.findByRole("list", { name: "Groceries transactions" });
+    expect(list).toHaveTextContent("Lidl");
+    expect(list).toHaveTextContent("€42.50");
+    expect(list).not.toHaveTextContent("Cinema");
+    expect(list).not.toHaveTextContent("Old shop");
+
+    await user.click(screen.getByRole("button", { name: "Hide Groceries transactions" }));
+    expect(screen.queryByRole("list", { name: "Groceries transactions" })).toBeNull();
+  });
+
   it("keeps the budget when deletion is cancelled", async () => {
     vi.mocked(apiFetch).mockResolvedValue(summary);
     vi.spyOn(window, "confirm").mockReturnValue(false);

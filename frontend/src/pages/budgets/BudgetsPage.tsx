@@ -3,14 +3,32 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "../../api/api";
 import { useNavigate } from "react-router-dom";
 
-import type { MonthlySummaryResponse, BudgetStatus } from "../../api/type";
+import type {
+  MonthlySummaryResponse,
+  BudgetStatus,
+  TransactionResponse,
+} from "../../api/type";
 import DeleteButton from "../../components/DeleteButton";
 import Skeleton from "../../components/Skeleton";
 
 export default function BudgetsPage() {
   const [budgets, setBudgets] = useState<BudgetStatus[]>([]);
   const [loading, setLoading] = useState(true);
+  const [openId, setOpenId] = useState<number | null>(null);
+  const [txs, setTxs] = useState<TransactionResponse[] | null>(null);
+  const [txError, setTxError] = useState(false);
   const navigate = useNavigate();
+
+  // Transactions are fetched once, the first time a budget is opened
+  const toggle = (id: number) => {
+    setOpenId((cur) => (cur === id ? null : id));
+    if (txs === null) {
+      setTxError(false);
+      apiFetch<TransactionResponse[]>("/transactions")
+        .then((data) => setTxs(data ?? []))
+        .catch(() => setTxError(true));
+    }
+  };
 
   useEffect(() => {
     const today = new Date();
@@ -128,11 +146,16 @@ export default function BudgetsPage() {
                 danger: "linear-gradient(90deg,#f87171,#dc2626)",
               }[level];
 
+              const isOpen = openId === b.budgetId;
+
               return (
                 <div
                   key={b.budgetId}
                   className="budget-tile"
+                  onClick={() => toggle(b.budgetId)}
                   style={{
+                    cursor: "pointer",
+                    gridColumn: isOpen ? "1 / -1" : undefined,
                     animationDelay: `${i * 0.07}s`,
                     padding: "18px 18px 16px",
                     borderRadius: 18,
@@ -151,15 +174,38 @@ export default function BudgetsPage() {
                       alignItems: "center",
                     }}
                   >
-                    <div
+                    <button
+                      type="button"
+                      aria-expanded={isOpen}
+                      aria-label={`${isOpen ? "Hide" : "Show"} ${b.category} transactions`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggle(b.budgetId);
+                      }}
                       style={{
+                        all: "unset",
+                        cursor: "pointer",
                         fontWeight: 600,
                         fontSize: 15,
                         color: "var(--text)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
                       }}
                     >
                       {b.category}
-                    </div>
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          fontSize: 11,
+                          color: "var(--text-muted)",
+                          transition: "transform 0.2s",
+                          transform: isOpen ? "rotate(90deg)" : "none",
+                        }}
+                      >
+                        ▶
+                      </span>
+                    </button>
                     <span
                       style={{
                         padding: "4px 10px",
@@ -226,7 +272,18 @@ export default function BudgetsPage() {
                     {Math.abs(b.difference).toFixed(2)}
                   </div>
 
-                  <div style={{ marginTop: 4, textAlign: "right" }}>
+                  {isOpen && (
+                    <BudgetTransactions
+                      category={b.category}
+                      txs={txs}
+                      error={txError}
+                    />
+                  )}
+
+                  <div
+                    style={{ marginTop: 4, textAlign: "right" }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <DeleteButton
                       label={`Delete ${b.category} budget`}
                       confirmMessage={`Delete the "${b.category}" budget? Your transactions will not be affected.`}
@@ -260,6 +317,88 @@ export default function BudgetsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+const categoryKey = (c?: string | null) =>
+  c && c.trim() ? c.trim().toLowerCase() : "uncategorized";
+
+/** This month's expenses in the budget's category (same matching as the backend report). */
+function BudgetTransactions({
+  category,
+  txs,
+  error,
+}: {
+  category: string;
+  txs: TransactionResponse[] | null;
+  error: boolean;
+}) {
+  if (error) {
+    return <p style={{ fontSize: 13, color: "#b91c1c" }}>Could not load transactions.</p>;
+  }
+  if (txs === null) {
+    return <p style={{ fontSize: 13, color: "var(--text-muted)" }}>Loading transactions…</p>;
+  }
+
+  const today = new Date();
+  const monthPrefix = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+  const key = categoryKey(category);
+  const rows = txs
+    .filter(
+      (t) =>
+        t.type === "EXPENSE" &&
+        t.date.startsWith(monthPrefix) &&
+        categoryKey(t.category) === key
+    )
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  if (rows.length === 0) {
+    return (
+      <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 8 }}>
+        No {category} expenses this month.
+      </p>
+    );
+  }
+
+  return (
+    <ul
+      aria-label={`${category} transactions`}
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        listStyle: "none",
+        margin: "8px 0 0",
+        padding: 0,
+        borderTop: "1px solid var(--border)",
+        cursor: "default",
+      }}
+    >
+      {rows.map((t) => (
+        <li
+          key={t.id}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            padding: "8px 0",
+            borderBottom: "1px solid var(--border)",
+            fontSize: 13,
+          }}
+        >
+          <span style={{ minWidth: 0 }}>
+            <span style={{ color: "var(--text)", fontWeight: 500 }}>
+              {t.description || "(no description)"}
+            </span>
+            <span style={{ display: "block", color: "var(--text-faint)", fontSize: 12 }}>
+              {t.date}
+              {t.accountName ? ` · ${t.accountName}` : ""}
+            </span>
+          </span>
+          <span style={{ color: "var(--text)", fontWeight: 600, whiteSpace: "nowrap" }}>
+            €{t.amount.toFixed(2)}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

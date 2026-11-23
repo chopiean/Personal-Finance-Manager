@@ -65,4 +65,26 @@ class CsvExportControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Coffee")));
     }
+
+    @Test
+    @WithMockUser(username = "jdoe")
+    void exportAll_quotesFieldsWithCommas_andUsesImportColumnOrder() throws Exception {
+        User user = new User("jdoe", "jdoe@example.com", "hashed", "ROLE_USER");
+        Account account = Account.builder()
+                .id(1L).name("Main").currency("EUR").initialBalance(BigDecimal.TEN)
+                .type(AccountType.BANK).archived(false).createdAt(LocalDate.now()).user(user).build();
+        Transaction tx = Transaction.builder()
+                .id(1L).description("Lunch, coffee").category("Food").amount(12.5)
+                .date(LocalDate.of(2025, 6, 1)).type(TransactionType.EXPENSE)
+                .account(account).user(user).build();
+
+        when(transactionRepository.findByUserUsername("jdoe")).thenReturn(List.of(tx));
+
+        mockMvc.perform(get("/api/csv/transactions"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.startsWith(
+                        "date,description,category,amount,type,account")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "2025-06-01,\"Lunch, coffee\",Food,12.5,EXPENSE,Main")));
+    }
 }

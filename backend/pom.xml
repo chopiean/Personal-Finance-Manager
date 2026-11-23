@@ -26,6 +26,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- CSV parsing and writing (RFC 4180 quoting) -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.11.0</version>
+        </dependency>
+
         <!-- Web / REST -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

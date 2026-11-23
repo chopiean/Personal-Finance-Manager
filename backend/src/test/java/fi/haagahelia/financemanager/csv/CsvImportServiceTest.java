@@ -114,6 +114,61 @@ class CsvImportServiceTest {
     }
 
     @Test
+    void importCsv_handlesQuotedFieldsWithCommasAndQuotes() {
+        String csv = "date,description,category,amount,type\n"
+                + "2025-01-01,\"Lunch, coffee\",Food,12.50,EXPENSE\n"
+                + "2025-01-02,\"The \"\"best\"\" pizza\",Food,9.90,EXPENSE\n";
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "transactions.csv", "text/csv", csv.getBytes(StandardCharsets.UTF_8));
+
+        when(transactionService.createTransactionFromCsv(any(TransactionRequest.class), eq("jdoe")))
+                .thenReturn(TransactionResponse.builder().id(1L).build());
+
+        int count = csvImportService.importCsv(file, 5L, "jdoe");
+
+        assertThat(count).isEqualTo(2);
+        ArgumentCaptor<TransactionRequest> captor = ArgumentCaptor.forClass(TransactionRequest.class);
+        verify(transactionService, times(2)).createTransactionFromCsv(captor.capture(), eq("jdoe"));
+        assertThat(captor.getAllValues().get(0).getDescription()).isEqualTo("Lunch, coffee");
+        assertThat(captor.getAllValues().get(0).getAmount()).isEqualTo(12.50);
+        assertThat(captor.getAllValues().get(1).getDescription()).isEqualTo("The \"best\" pizza");
+    }
+
+    @Test
+    void importCsv_acceptsTheAppsOwnExportFormat() {
+        // Same header and quoting as CsvExportController produces
+        String csv = "date,description,category,amount,type,account\r\n"
+                + "2025-06-01,\"Lunch, coffee\",Food,12.5,EXPENSE,Main\r\n";
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "transactions.csv", "text/csv", csv.getBytes(StandardCharsets.UTF_8));
+
+        when(transactionService.createTransactionFromCsv(any(TransactionRequest.class), eq("jdoe")))
+                .thenReturn(TransactionResponse.builder().id(1L).build());
+
+        assertThat(csvImportService.importCsv(file, 5L, "jdoe")).isEqualTo(1);
+
+        ArgumentCaptor<TransactionRequest> captor = ArgumentCaptor.forClass(TransactionRequest.class);
+        verify(transactionService).createTransactionFromCsv(captor.capture(), eq("jdoe"));
+        assertThat(captor.getValue().getDescription()).isEqualTo("Lunch, coffee");
+        assertThat(captor.getValue().getCategory()).isEqualTo("Food");
+    }
+
+    @Test
+    void importCsv_throws_whenQuoteIsNotClosed() {
+        String csv = "date,description,category,amount,type\n"
+                + "2025-01-01,\"Lunch, coffee,Food,12.50,EXPENSE\n";
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "transactions.csv", "text/csv", csv.getBytes(StandardCharsets.UTF_8));
+
+        assertThatThrownBy(() -> csvImportService.importCsv(file, 5L, "jdoe"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Failed to import CSV");
+    }
+    
+    @Test
     void importCsv_propagatesSecurityException_whenAccountNotOwned() {
         String csv = "date,description,category,amount,type\n"
                 + "2025-01-01,Coffee,Food,4.50,EXPENSE\n";

@@ -92,4 +92,17 @@ class AssistantControllerTest {
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(content().string("AI assistant is not configured. Set AI_API_KEY."));
     }
+
+    @Test
+    @WithMockUser(username = "jdoe")
+    void chat_returns429_whenRateLimitExceeded() throws Exception {
+        when(assistantService.chat(any()))
+                .thenThrow(new AssistantRateLimitException("Too many questions. Please wait a minute and try again."));
+
+        mockMvc.perform(post("/api/assistant/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(new ChatRequest("hi", null))))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(content().string("Too many questions. Please wait a minute and try again."));
+    }
 }

@@ -29,6 +29,7 @@ class AssistantServiceTest {
     @Mock private LlmClient llmClient;
     @Mock private FinanceContextBuilder contextBuilder;
     @Mock private CurrentUserService currentUserService;
+    @Mock private AssistantRateLimiter rateLimiter;
 
     @InjectMocks private AssistantService assistantService;
 
@@ -89,6 +90,34 @@ class AssistantServiceTest {
         assertThatThrownBy(() -> assistantService.chat(new ChatRequest("hi", null)))
                 .isInstanceOf(AssistantUnavailableException.class)
                 .hasMessage("down");
+    }
+
+    @Test
+    void chat_checksRateLimitForCurrentUser() {
+        when(llmClient.complete(anyString(), anyList())).thenReturn("ok");
+
+        assistantService.chat(new ChatRequest("hi", null));
+
+        verify(rateLimiter).check("jdoe");
+    }
+
+    @Test
+    void chat_doesNotCallModel_whenRateLimitExceeded() {
+        doThrow(new AssistantRateLimitException("Too many questions."))
+                .when(rateLimiter).check("jdoe");
+
+        assertThatThrownBy(() -> assistantService.chat(new ChatRequest("hi", null)))
+                .isInstanceOf(AssistantRateLimitException.class);
+
+        verifyNoInteractions(llmClient);
+        verifyNoInteractions(contextBuilder);
+    }
+
+    @Test
+    void systemPrompt_hasNoConflictingLanguageRule() {
+        assertThat(AssistantService.SYSTEM_PROMPT)
+                .doesNotContain("same language the user writes in")
+                .contains("Always reply in English");
     }
 
     @Test

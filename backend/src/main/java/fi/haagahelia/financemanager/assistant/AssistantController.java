@@ -32,4 +32,10 @@ public class AssistantController {
         log.warn("AI assistant unavailable: {}", ex.getMessage(), ex.getCause());
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ex.getMessage());
     }
+
+    /** Too many questions from one user → 429. */
+    @ExceptionHandler(AssistantRateLimitException.class)
+    public ResponseEntity<String> handleRateLimit(AssistantRateLimitException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ex.getMessage());
+    }
 }
